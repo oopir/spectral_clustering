@@ -1,0 +1,42 @@
+
+@ what to do with K, if the specified goal does not requires K?
+
+
+
+
+
+------------------ logical contradictions in instruction files ------------------
+
+@ multilple files:
+    -section 2.3 states "you can use functions implemented only in spkmeans.c"
+    -but earlier instruction says we can create more .c files
+
+
+@ where to read args and file?
+    -both Python and C instructions say to read goal & file_name
+    -in the forum, rami said to read input ONLY in Python
+    -https://moodle.tau.ac.il/mod/forum/discuss.php?d=66417
+
+
+@ arguments to C api functions
+    -section 2.2 states the arguments to read from the C code
+    -section 2.3 states we can decide which args to send/receive from API functions
+    WHAT IS THE POINT OF SECTION 2.2 ???
+
+@ edges in graph
+    -section 1.1.1 says "only if Wij > 0, we define an edge between i,j"
+    -but the formula fora Wij ALWAYS returns a positive number
+    -eventually, after reading line 3 of 1.1.1, we concluded they know its always positive...
+
+
+
+------------------------------- TODO - IMPORTANT ---------------------------------
+
+@ bug in exercise 2 - read_input:
+    if read_input fails at memory allocation *mid-operation*, 
+    it does not free the memory that it did allocate before the failure.
+
+
+@ reuse new generic code instead of exercise 2 old code, wherever we see fit.
+    -matrix malloc
+    -conversion from matrix to python-obj

@@ -1,7 +1,10 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <math.h>
 
 typedef double* point;
+
+typedef double** matrix;
 
 struct cluster {
     point  sum;
@@ -334,8 +337,136 @@ static PyObject* fit(PyObject *self, PyObject *args)
 
 
 
+/*
+----------------------------------------------------------------------- 
+-----------------------------NEW CODE----------------------------------
+-----------------------------------------------------------------------
+*/
+
+
+static int matrix_malloc(matrix *mat, int dim1, int dim2)
+{
+    int i,j;
+
+    (*mat) = malloc(sizeof(point) * dim1);
+    if ((*mat) == NULL)
+    {
+        return -1;
+    }
+    for (i = 0; i < dim1; i++)
+    {
+        (*mat)[i] = malloc(sizeof(double) * dim2);
+
+        /* if allocation failed - free all allocated arrays, then return -1
+           else - populate array with zeroes */
+        if ((*mat)[i] == NULL)
+        {
+            for (j = 0; j < i; j++) 
+            {
+                free((*mat)[j]);
+            }
+            free((*mat));
+            return -1;
+        }
+        else
+        {
+            for (j = 0; j < dim2; j++)
+            {
+                (*mat)[i][j] = 0;
+            }
+        }
+    }
+    return 0;
+}
+
+static PyObject* matrix_to_python(matrix mat, int dim1, int dim2)
+{
+    /* code is based on this stack-overflow thread:
+        https://stackoverflow.com/questions/50668981/how-to-return-a-list-of-ints-in-python-c-api-extension-with-pylist/50683462 */
+        
+    int i,j;
+    PyObject* returned_list = PyList_New(dim1);
+
+    for (i = 0; i < dim1; ++i)
+    {
+        PyObject* list_i = PyList_New(dim2);
+        for (j = 0; j < dim2; ++j)
+        {
+            PyObject* python_double = Py_BuildValue("d", mat[i][j]);
+            PyList_SetItem(list_i, j, python_double);
+        }
+        PyList_SetItem(returned_list, i, list_i);
+    }
+
+    return returned_list;
+
+}
+
+static void matrix_free(matrix *mat, int dim1, int dim2)
+{
+    int i;
+    for (i=0; i < dim1; i++)
+    {
+        free((*mat)[i]);
+    }
+    free((*mat));
+}
+
+static PyObject* wam(PyObject *self, PyObject *args)
+{
+    PyObject *datapoints_obj, *result;
+    point *datapoints;
+    int N,d;
+    int i,j;
+    double tmp;
+    matrix wam;
+    
+    /* parse arguments from python int our variables */
+    if (!PyArg_ParseTuple(args, "Oii", &datapoints_obj, &N, &d))
+    {
+        printf("An Error has Occurred");
+        return NULL;
+    }
+
+    /* copy input from python objects into c arrays 
+       (read_input returns -1 if function failed) */
+    if (read_input(datapoints_obj, &datapoints, N, d) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* allocate wam */
+    if (matrix_malloc(&wam, N, N) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* populate wam */
+    for (i = 0; i < N; i++)
+    {
+        for (j = 0; j < N; j++)
+        {
+            if (i != j)
+                wam[i][j] = exp(-0.5 * norm_of_diff(datapoints[i], datapoints[j], d, 1));
+        }
+    }
+    
+    /* convert wam to pyobject */
+    result = matrix_to_python(wam, N, N);
+
+    /* free allocated memory */
+    matrix_free(&wam, N, N);
+    matrix_free(&datapoints, N, d);
+
+    return result;
+}
+
+
 static PyMethodDef capiMethods[] = {
     { "fit", (PyCFunction) fit, METH_VARARGS, PyDoc_STR("kmeans algorithm given initial centroids") },
+    { "wam", (PyCFunction) wam, METH_VARARGS, PyDoc_STR("compute weighted adjacency matrix") },
     {NULL, NULL, 0, NULL}
 };
 
