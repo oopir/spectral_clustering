@@ -22,6 +22,9 @@ struct datapoint_info {
     int d;
 } ;
 
+struct rotation_mat_info {
+    int i;  int j;  double c;  double s;
+} ;
 
 /*  functions that are not exposed */
 
@@ -401,7 +404,6 @@ static PyObject* matrix_to_python(matrix mat, int dim1, int dim2)
     }
 
     return returned_list;
-
 }
 
 static void matrix_free(matrix *mat, int dim1, int dim2)
@@ -585,6 +587,265 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
     return result;
 }
 
+
+
+static struct rotation_mat_info* get_p_info(matrix A, int N) 
+{
+    struct rotation_mat_info *result;
+    struct rotation_mat_info p = {0, 0, 0, 0} ;
+    int x, y;
+    double theta, sign_theta, t;
+
+    /* find the index (i,j) of the largest absolute value */
+    printf("printing A\n");
+    for (x = 0; x < N; x++)
+    {
+        for (y = 0; y < N; y++)
+        {
+            printf("%d %d %f\t", x, y, A[x][y]);
+            if (fabs(A[x][y]) > fabs(A[p.i][p.j]))
+            {
+                p.i = x;
+                p.j = y;
+            }
+        }
+        printf("\n");
+    }
+    /* obtain c,s */
+    theta = (A[p.j][p.j] - A[p.i][p.i]) / (2 * A[p.i][p.j]);
+    sign_theta = theta >= 0 ? 1 : -1;
+    t = sign_theta / (fabs(theta) + sqrt(theta * theta + 1));
+    p.c = 1 / (sqrt(t * t + 1));
+    p.s = t * p.c;
+
+    printf("before: %d %d %f %f\n", p.i, p.j, p.c, p.s);
+    
+    result = malloc(sizeof(struct rotation_mat_info));
+
+    result->i = p.i;
+    result->j = p.j;
+    result->c = p.c;
+    result->s = p.s;
+
+    return result;
+}
+
+static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_info p)
+{
+    int x,y,r;
+
+    /* start out with values of A */
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+            A_prime[x][y] = A[x][y];
+        
+    /* make necessary modifications to A_prime */
+    for (r = 0; r < N; r++)
+    {
+        if (r != p.i && r != p.j)
+        {
+            A_prime[r][p.i] = p.c * A[r][p.i] - p.s * A[r][p.j];
+            A_prime[p.i][r] = A_prime[r][p.i];
+
+            A_prime[r][p.j] = p.c * A[r][p.j] + p.s * A[r][p.i];
+            A_prime[p.j][r] = A_prime[r][p.j];
+        }
+    }
+    
+    A_prime[p.i][p.i] = 
+        pow(p.c, 2) * A[p.i][p.i] +
+        pow(p.s, 2) * A[p.j][p.j] - 
+        2 * p.s * p.c * A[p.i][p.j];
+
+    A_prime[p.j][p.j] = 
+        pow(p.s, 2) * A[p.i][p.i] +
+        pow(p.c, 2) * A[p.j][p.j] + 
+        2 * p.s * p.c * A[p.i][p.j];
+
+    A_prime[p.i][p.j] = 0;
+    A_prime[p.j][p.i] = 0;
+
+    printf("printing A PRIME\n");
+    for (x = 0; x < N; x++)
+    {
+        for (y = 0; y < N; y++)
+        {
+            printf("%d %d %f\t", x, y, A_prime[x][y]);
+        }
+        printf("\n");
+    }
+    
+}
+
+static double off(matrix A, int N)
+{
+    double val = 0;
+    int i,j;
+    for (i = 0; i < N; i++)
+        for (j = 0; j < N; j++)
+         if (j != i)
+            val += pow(A[i][j], 2);
+    
+    return val;
+}
+
+static int converges(matrix A, matrix A_prime, int N)
+{
+    return (off(A, N) - off(A_prime, N) <= pow(10,-15));
+}
+
+static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_info p_info)
+{
+    int x,y,k;
+
+    /* populate P according to p_info */
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+        {
+            if ((x == p_info.i && y == p_info.i) || (x == p_info.j && y == p_info.j))
+                P[x][y] = p_info.c;
+            else
+                if (x == y)
+                    P[x][y] = 1;
+                else 
+                    if (x == p_info.i && y == p_info.j)
+                        P[x][y] = p_info.s;
+                    else
+                        if (x == p_info.j && y == p_info.i)
+                            P[x][y] = -p_info.s;
+                        else
+                            P[x][y] = 0;
+        }
+    
+
+    /* tmp = V*P */
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+        {
+            tmp[x][y] = 0;
+            for (k = 0; k < N; k++)
+                tmp[x][y] += V[x][k] * P[k][y];
+        }
+            
+    /* V <-- tmp */
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+            V[x][y] = tmp[x][y];
+        
+}
+
+static PyObject* jacobi(PyObject *self, PyObject *args)
+{
+    PyObject *A_obj;
+    matrix A;
+    int N;
+    
+    /* parse arguments from python into our variables */
+    if (!PyArg_ParseTuple(args, "Oi", &A_obj, &N))
+    {
+        printf("An Error has Occurred");
+        return NULL;
+    }
+
+    /* copy input from python objects into c arrays 
+       (read_input returns -1 if function failed) */
+    if (read_input(A_obj, &A, N, N) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* ------------------------------------------------- */
+
+    matrix A_prime, P, V, tmp;
+    struct rotation_mat_info p_info;
+    int i, x, y;
+
+    /* make necessary memory allocations for out matrices */
+    if (matrix_malloc(&A_prime, N, N) == -1 || 
+        matrix_malloc(&P, N, N) == -1 ||
+        matrix_malloc(&V, N, N) == -1 ||
+        matrix_malloc(&tmp, N, N))
+    {
+        printf("An Error has Occurred");
+        return NULL;
+    }
+
+    /* initialize V as identity matrix */
+    for (x = 0; x < N; x++)
+        V[x][x] = 1;
+    
+
+    /* perform algorithm */
+    for (i = 0; i < 100; i++)
+    {
+        p_info = *(get_p_info(A, N));
+        printf("after: %d %d %f %f\n", p_info.i, p_info.j, p_info.c, p_info.s);
+        update_A_prime(A_prime, A, N, p_info);
+        update_V(V, P, tmp, N, p_info);
+        if (converges(A, A_prime, N) == 1)
+            break;
+
+        /* A <-- A_prime */
+        for (x = 0; x < N; x++)
+            for (y = 0; y < N; y++)
+                A[x][y] = A_prime[x][y];
+            
+        
+    }    
+    /* A <-- A_prime */
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+            A[x][y] = A_prime[x][y];
+
+
+    /* create a vector of eigenvalues */
+    double *eigenvalues = malloc(sizeof(double) * N);
+    if (eigenvalues == NULL)
+    {
+        matrix_free(&A, N, N);
+        matrix_free(&A_prime, N, N);
+        matrix_free(&P, N, N);
+        matrix_free(&V, N, N);
+        matrix_free(&tmp, N, N);
+        printf("An Error has Occurred");
+        return NULL;
+    }
+    for (i = 0; i < N; i++)
+        eigenvalues[i] = A_prime[i][i];
+    
+    /* ------------------------------------------------- */
+
+    /* code is based on this stack-overflow thread:
+    https://stackoverflow.com/questions/50668981/how-to-return-a-list-of-ints-in-python-c-api-extension-with-pylist/50683462 */
+        
+    /* create the object to return */
+    PyObject* returned_list = PyList_New(N+1);
+
+    /* add the eigenvalues to the returned object */
+    PyObject* list_tmp = PyList_New(N);
+    for (x = 0; x < N; ++x)
+    {
+        PyObject* python_double = Py_BuildValue("d", eigenvalues[x]);
+        PyList_SetItem(list_tmp, x, python_double);
+    }
+    PyList_SetItem(returned_list, 0, list_tmp);
+
+    /* add the eigenvectors to the returned object */
+    for (x = 1; x < N+1; ++x)
+    {
+        PyObject* list_i = PyList_New(N);
+        for (y = 0; y < N; ++y)
+        {
+            PyObject* python_double = Py_BuildValue("d", V[x-1][y]);
+            PyList_SetItem(list_i, y, python_double);
+        }
+        PyList_SetItem(returned_list, x, list_i);
+    }
+
+    return returned_list;
+}
+
 /*
 ----------------------------------------------------------------------- 
 -----------------------------API CODE----------------------------------
@@ -597,6 +858,7 @@ static PyMethodDef capiMethods[] = {
     { "wam", (PyCFunction) wam, METH_VARARGS, PyDoc_STR("compute weighted adjacency matrix") },
     { "ddg", (PyCFunction) ddg, METH_VARARGS, PyDoc_STR("compute diagonal degree matrix") },
     { "lnorm", (PyCFunction) lnorm, METH_VARARGS, PyDoc_STR("compute normed laplacian matrix") },
+    { "jacobi", (PyCFunction) jacobi, METH_VARARGS, PyDoc_STR("compute eigenvalues and eigenvectors") },
     {NULL, NULL, 0, NULL}
 };
 

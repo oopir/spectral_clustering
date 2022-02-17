@@ -194,7 +194,21 @@ def main():
 
         lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
         pretty_print_mat(lnorm)
+    
+    elif goal == "jacobi":
+        wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
+        wam_flat = sum(wam, [])
         
+        ddg = mykmeanssp.ddg(wam_flat, N)
+        ddg_flat = sum(ddg, [])
+
+        lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
+        lnorm_flat = sum(lnorm, [])
+
+        jacobi_output = mykmeanssp.jacobi(lnorm_flat, N)
+        pretty_print_mat(jacobi_output)
+
+
     else:
         print("Invalid Input!")
         exit(1)

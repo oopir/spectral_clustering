@@ -28,6 +28,12 @@
     -but the formula fora Wij ALWAYS returns a positive number
     -eventually, after reading line 3 of 1.1.1, we concluded they know its always positive...
 
+@ convergence: when checking if smaller than epsilon, should we 
+                use absolute value on the difference or not?
+
+@ get_p_info: we "malloc"-ed the struct, so we need to make sure it didnt fail
+
+@ iterating on all matrix VS iteration on top "triangle" - argue later
 
 
 ------------------------------- TODO - IMPORTANT ---------------------------------
@@ -40,3 +46,11 @@
 @ reuse new generic code instead of exercise 2 old code, wherever we see fit.
     -matrix malloc
     -conversion from matrix to python-obj
+
+@ malloc day !
+    -make sure we always free stuff after the function ends
+    -make sure we always free stuff if allocation failed mid-way
+    -There's something we didn't account for:
+        when a function mallocs 2 (or more) matrices,
+        if the failure is in the 'n'th matrix,
+        we need to free matrices 1,...,(n-1) before exiting!
