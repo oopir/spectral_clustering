@@ -344,6 +344,8 @@ static PyObject* fit(PyObject *self, PyObject *args)
 */
 
 
+/*  returns a matrix initialized with zeroes  */
+/*  DDG functions assumes the matrix has zeroes in it !!!  */
 static int matrix_malloc(matrix *mat, int dim1, int dim2)
 {
     int i,j;
@@ -418,7 +420,6 @@ static PyObject* wam(PyObject *self, PyObject *args)
     point *datapoints;
     int N,d;
     int i,j;
-    double tmp;
     matrix wam;
     
     /* parse arguments from python int our variables */
@@ -463,10 +464,139 @@ static PyObject* wam(PyObject *self, PyObject *args)
     return result;
 }
 
+static PyObject* ddg(PyObject *self, PyObject *args)
+{
+    PyObject *wam_obj, *result;
+    matrix wam, ddg;
+    int N;
+    int i,j;
+    
+    /* parse arguments from python int our variables */
+    if (!PyArg_ParseTuple(args, "Oi", &wam_obj, &N))
+    {
+        printf("An Error has Occurred");
+        return NULL;
+    }
+
+    /* copy input from python objects into c arrays 
+       (read_input returns -1 if function failed) */
+    if (read_input(wam_obj, &wam, N, N) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* allocate ddg */
+    if (matrix_malloc(&ddg, N, N) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* populate ddg */
+    /* ASSUMES ddg is initialized with zeroes */
+    for (i = 0; i < N; i++)
+    {
+        for (j = 0; j < N; j++)
+        {
+            ddg[i][i] += wam[i][j];
+        }
+    }
+    
+    /* convert ddg to pyobject */
+    result = matrix_to_python(ddg, N, N);
+
+    /* free allocated memory */
+    matrix_free(&wam, N, N);
+    matrix_free(&ddg, N, N);
+
+    return result;
+}
+
+static PyObject* lnorm(PyObject *self, PyObject *args)
+{
+    PyObject *ddg_obj, *wam_obj, *result;
+    matrix wam, ddg, ddg_nhalf, lnorm, tmp_mat;
+    int N;
+    int i,j,k;
+    
+    /* parse arguments from python int our variables */
+    if (!PyArg_ParseTuple(args, "OOi", &wam_obj, &ddg_obj, &N))
+    {
+        printf("An Error has Occurred");
+        return NULL;
+    }
+
+    /* copy input from python objects into c arrays 
+       (read_input returns -1 if function failed) */
+    if ((read_input(wam_obj, &wam, N, N) == -1) || (read_input(ddg_obj, &ddg, N, N) == -1)) 
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* allocate lnorm */
+    if ((matrix_malloc(&lnorm, N, N) == -1) || 
+        (matrix_malloc(&tmp_mat, N, N) == -1) || 
+        (matrix_malloc(&ddg_nhalf, N, N) == -1))
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* populate ddg_nhalf */
+    /* ASSUMES ddg_nhalf is initialized with zeroes */
+    for (i = 0; i < N; i++)
+        ddg_nhalf[i][i] += ddg[i][i] == 0 ? 0 : (1 / sqrt(ddg[i][i]));
+
+
+    /* populate tmp_mat */
+    /* ASSUMES tmp_mat is initialized with zeroes */
+    for (i = 0; i < N; i++)
+        for (j = 0; j < N; j++)
+            for (k = 0; k < N; k++)
+                tmp_mat[i][j] += ddg_nhalf[i][k] * wam[k][j];
+                
+
+    /* populate lnorm */
+    /* ASSUMES lnorm is initialized with zeroes */
+    for (i = 0; i < N; i++)
+    {
+        for (j = 0; j < N; j++)
+        {
+            for (k = 0; k < N; k++)
+                lnorm[i][j] += tmp_mat[i][k] * ddg_nhalf[k][j];
+        
+            lnorm[i][j] = i == j ? 1 - lnorm[i][j] : -lnorm[i][j];
+        }
+    }
+    
+    /* convert lnorm to pyobject */
+    result = matrix_to_python(lnorm, N, N);
+
+    /* free allocated memory */
+    matrix_free(&wam, N, N);
+    matrix_free(&ddg, N, N);
+    matrix_free(&ddg_nhalf, N, N);
+    matrix_free(&lnorm, N, N);
+    matrix_free(&tmp_mat, N, N);
+
+
+    return result;
+}
+
+/*
+----------------------------------------------------------------------- 
+-----------------------------API CODE----------------------------------
+-----------------------------------------------------------------------
+*/
+
 
 static PyMethodDef capiMethods[] = {
     { "fit", (PyCFunction) fit, METH_VARARGS, PyDoc_STR("kmeans algorithm given initial centroids") },
     { "wam", (PyCFunction) wam, METH_VARARGS, PyDoc_STR("compute weighted adjacency matrix") },
+    { "ddg", (PyCFunction) ddg, METH_VARARGS, PyDoc_STR("compute diagonal degree matrix") },
+    { "lnorm", (PyCFunction) lnorm, METH_VARARGS, PyDoc_STR("compute normed laplacian matrix") },
     {NULL, NULL, 0, NULL}
 };
 

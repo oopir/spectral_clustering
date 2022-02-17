@@ -138,7 +138,7 @@ def read_args():
     if (len(sys.argv) != 4 or \
         not is_int(sys.argv[1]) or \
         sys.argv[2] not in ["spk", "wam", "ddg", "lnorm", "jacobi"] or \
-        not (sys.argv[3].endswith(".txt") or sys.agrv[3].endswith(".csv"))):
+        not (sys.argv[3].endswith(".txt") or sys.argv[3].endswith(".csv"))):
             print("Invalid Input!")
             sys.exit(1)
         
@@ -152,6 +152,10 @@ def read_args():
 
     return K, goal, file_name
 
+
+def pretty_print_mat(mat):
+        data_str = "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat]) + "\n"
+        print(data_str)
 
 
 def main():
@@ -172,7 +176,25 @@ def main():
     # act according to the specified goal
     if goal == "wam":
         wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
-        print(wam)
+        pretty_print_mat(wam)
+
+    elif goal == "ddg":
+        wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
+        wam_flat = sum(wam, [])
+        
+        ddg = mykmeanssp.ddg(wam_flat, N)
+        pretty_print_mat(ddg)
+        
+    elif goal == "lnorm":
+        wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
+        wam_flat = sum(wam, [])
+        
+        ddg = mykmeanssp.ddg(wam_flat, N)
+        ddg_flat = sum(ddg, [])
+
+        lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
+        pretty_print_mat(lnorm)
+        
     else:
         print("Invalid Input!")
         exit(1)
