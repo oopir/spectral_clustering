@@ -589,37 +589,28 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
 
 
 
-static struct rotation_mat_info* get_p_info(matrix A, int N) 
+static void update_p_info(matrix A, int N, struct rotation_mat_info *p) 
 {
-    struct rotation_mat_info *result;
-    struct rotation_mat_info p = {0, 1, 0, 0} ;  /* assumes N > 1 */
+    /* initialize p.i, p.j --- assumes N > 1 */
+    p->i = 0 ; p->j = 1 ; 
     int x, y;
     double theta, sign_theta, t;
 
     /* find the index (i,j) of the largest OFF-DIAGONAL absolute value */
     for (x = 0; x < N; x++)
         for (y = 0; y < N; y++)
-            if (x != y && fabs(A[x][y]) > fabs(A[p.i][p.j]))
+            if (x != y && fabs(A[x][y]) > fabs(A[p->i][p->j]))
             {
-                p.i = x;
-                p.j = y;
+                p->i = x;
+                p->j = y;
             }
 
     /* obtain c,s */
-    theta = (A[p.j][p.j] - A[p.i][p.i]) / (2 * A[p.i][p.j]);
+    theta = (A[p->j][p->j] - A[p->i][p->i]) / (2 * A[p->i][p->j]);
     sign_theta = theta >= 0 ? 1 : -1;
     t = sign_theta / (fabs(theta) + sqrt(theta * theta + 1));
-    p.c = 1 / (sqrt(t * t + 1));
-    p.s = t * p.c;
-
-    result = malloc(sizeof(struct rotation_mat_info));
-
-    result->i = p.i;
-    result->j = p.j;
-    result->c = p.c;
-    result->s = p.s;
-
-    return result;
+    p->c = 1 / (sqrt(t * t + 1));
+    p->s = t * p->c;
 }
 
 static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_info p)
@@ -760,7 +751,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
     /* perform algorithm */
     for (i = 0; i < 100; i++)
     {
-        p_info = *(get_p_info(A, N));
+        update_p_info(A, N, &p_info);
         update_A_prime(A_prime, A, N, p_info);
         update_V(V, P, tmp, N, p_info);
         if (converges(A, A_prime, N) == 1)
