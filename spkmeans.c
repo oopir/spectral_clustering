@@ -1,6 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
+#include <stdlib.h>
 
 typedef double* point;
 
@@ -814,7 +815,164 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         PyList_SetItem(returned_list, x, list_i);
     }
 
+
+    /* free allocated memory */
+    matrix_free(&A, N, N);
+    matrix_free(&A_prime, N, N);
+    matrix_free(&P, N, N);
+    matrix_free(&V, N, N);
+    matrix_free(&tmp, N, N);
+    free(eigenvalues);
+
     return returned_list;
+}
+
+
+
+static int cmpfunc (const void * a, const void * b) 
+{
+    double *row_a = *((double **)a);
+    double *row_b = *((double **)b);
+    
+    return row_a[0] - row_b[0] <= 0 ? -1 : 1 ;
+}
+
+static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
+{
+    int i,j;
+
+    /* create transpose_jacobi */
+    for (i = 0; i < N; i++)
+    {
+        for (j = 0; j < N+1; j++)
+        {
+            transpose_jacobi[i][j] = jacobi[j][i];
+        }
+    }
+
+    qsort(transpose_jacobi, N, sizeof(double *), cmpfunc);
+    
+    /* converting back to original */
+    for (i = 0; i < N+1; i++)
+    {
+        for (j = 0; j < N; j++)
+        {
+            jacobi[i][j] = transpose_jacobi[j][i];
+        }
+    }
+}
+
+static int determine_k(matrix jacobi, int N, int k)
+{
+    /* If k=0, return as is. Otherwise, perform heuristic */
+    if (k != 0)
+        return k;
+
+    int argmax, i;
+    double max;
+    argmax = 0;
+
+    max = jacobi[0][1] - jacobi[0][0];
+
+    for (i = 1; i < N-1; i++)
+        if (jacobi[0][i+1] - jacobi[0][i] > max)
+        {
+            max = jacobi[0][i+1] - jacobi[0][i];
+            argmax = i;
+        }
+
+    k = argmax;
+    /* taking into account that according to instructions,
+        the first index should be 1 and not 0           */
+    k++;
+
+    return k;
+}
+
+static void populate_T(matrix T, matrix jacobi, int N, int k)
+{
+    int i,j;
+    double norm_i;
+
+    /* ASSUMES T is initialized with zeroes */
+    for (i = 1; i < N+1; i++)
+    {
+        /* compute the norm of U_i */
+        norm_i = 0;
+        for (j = 0; j < k; j++)
+            norm_i += pow(jacobi[i][j], 2);
+        norm_i = sqrt(norm_i);
+        
+        /* populate T_i */
+        for (j = 0; j < k; j++)
+        {
+            T[i][j] = jacobi[i][j] / norm_i;
+        }
+    }
+}
+
+/* perform steps 3-5 of the spectral clustering algorithm */
+/* input: jacobi matrix, (N+1) x (N) */
+static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
+{
+    PyObject *jacobi_obj, *result;
+    matrix jacobi, transpose_jacobi, T;
+    int N, k;
+    
+    /* parse arguments from python int our variables */
+    if (!PyArg_ParseTuple(args, "Oii", &jacobi_obj, &N, &k))
+    {
+        printf("An Error has Occurred");
+        return NULL;
+    }
+
+    /* copy input from python objects into c arrays 
+       (read_input returns -1 if function failed) */
+    if (read_input(jacobi_obj, &jacobi, N+1, N) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+    
+    /* allocate transpose jacobi */
+    if (matrix_malloc(&transpose_jacobi, N, N+1) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+    
+    
+    /* sort jacobi matrix according to the eigenvalues (1st row) */
+    sort_jacobi(jacobi, transpose_jacobi, N);
+
+    /* determine new K */
+    k = determine_k(jacobi, N, k);
+    if (k == 1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* allocate T */
+    if (matrix_malloc(&T, N, k) == -1)
+    {
+        printf("An Error has Occurred");
+        exit(1);
+    }
+
+    /* populate T */
+    populate_T(T, jacobi, N, k);
+
+
+    /* convert T to pyobject */
+    result = matrix_to_python(T, N, k);
+
+    /* free allocated memory */
+    matrix_free(&jacobi, N, N);
+    matrix_free(&transpose_jacobi, N, N);
+    matrix_free(&T, N, k);
+
+    return result;
 }
 
 /*
@@ -830,6 +988,7 @@ static PyMethodDef capiMethods[] = {
     { "ddg", (PyCFunction) ddg, METH_VARARGS, PyDoc_STR("compute diagonal degree matrix") },
     { "lnorm", (PyCFunction) lnorm, METH_VARARGS, PyDoc_STR("compute normed laplacian matrix") },
     { "jacobi", (PyCFunction) jacobi, METH_VARARGS, PyDoc_STR("compute eigenvalues and eigenvectors") },
+    { "get_input_for_kmeans", (PyCFunction) get_input_for_kmeans, METH_VARARGS, PyDoc_STR("compute eigenvalues and eigenvectors") },
     {NULL, NULL, 0, NULL}
 };
 

@@ -31,11 +31,10 @@
 @ convergence: when checking if smaller than epsilon, should we 
                 use absolute value on the difference or not?
 
-@ get_p_info: we "malloc"-ed the struct, so we need to make sure it didnt fail
-
 @ iterating on all matrix VS iteration on top "triangle" - argue later
 
-@ end of jacobi - free memory, but AFTER building pyobject
+@ eigengap heuristic: if it chooses k=1 --> "An Error Has Occurred!"
+    this is according to https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
 
 
 ------------------------------- TODO - IMPORTANT ---------------------------------

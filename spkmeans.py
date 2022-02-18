@@ -59,18 +59,14 @@ def ex2_read_args():
     return K, max_iter, eps, file_name_1, file_name_2
 
 
-def ex2_main():
+def ex2_main(T):
     np.random.seed(0)
 
     # parse arguments
-    K, max_iter, eps, file_name_1, file_name_2 = ex2_read_args()
+    K, max_iter, eps = len(T[0]), 300, 0.0
 
-    # load the input data into a dataframe
-    merged_data  = pd.merge(pd.read_csv(file_name_1, header=None), pd.read_csv(file_name_2, header=None), on=0)
-    merged_data  = merged_data.sort_values(merged_data.columns[0])
-    
-    datapoints_w_ind = merged_data.to_numpy()
-    datapoints       = merged_data.drop(0, axis=1).to_numpy()
+    datapoints_w_ind = pd.DataFrame(T).insert(loc=0, column="a", value=range(K)).to_numpy()
+    datapoints       = T.to_numpy()
 
     # validate arguments based on data files
     if len(datapoints) == 0 or K >= len(datapoints):
@@ -207,6 +203,23 @@ def main():
 
         jacobi_output = mykmeanssp.jacobi(lnorm_flat, N)
         pretty_print_mat(jacobi_output)
+
+    elif goal == "spk":
+        wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
+        wam_flat = sum(wam, [])
+        
+        ddg = mykmeanssp.ddg(wam_flat, N)
+        ddg_flat = sum(ddg, [])
+
+        lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
+        lnorm_flat = sum(lnorm, [])
+
+        jacobi_output = mykmeanssp.jacobi(lnorm_flat, N)
+        jacobi_flat = sum(jacobi_output, [])
+        
+        T = mykmeanssp.get_input_for_kmeans(jacobi_flat, N, K)
+        
+        ex2_main(T)
 
 
     else:
