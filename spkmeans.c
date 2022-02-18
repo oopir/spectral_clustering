@@ -592,25 +592,19 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
 static struct rotation_mat_info* get_p_info(matrix A, int N) 
 {
     struct rotation_mat_info *result;
-    struct rotation_mat_info p = {0, 0, 0, 0} ;
+    struct rotation_mat_info p = {0, 1, 0, 0} ;  /* assumes N > 1 */
     int x, y;
     double theta, sign_theta, t;
 
-    /* find the index (i,j) of the largest absolute value */
-    printf("printing A\n");
+    /* find the index (i,j) of the largest OFF-DIAGONAL absolute value */
     for (x = 0; x < N; x++)
-    {
         for (y = 0; y < N; y++)
-        {
-            printf("%d %d %f\t", x, y, A[x][y]);
-            if (fabs(A[x][y]) > fabs(A[p.i][p.j]))
+            if (x != y && fabs(A[x][y]) > fabs(A[p.i][p.j]))
             {
                 p.i = x;
                 p.j = y;
             }
-        }
-        printf("\n");
-    }
+
     /* obtain c,s */
     theta = (A[p.j][p.j] - A[p.i][p.i]) / (2 * A[p.i][p.j]);
     sign_theta = theta >= 0 ? 1 : -1;
@@ -618,8 +612,6 @@ static struct rotation_mat_info* get_p_info(matrix A, int N)
     p.c = 1 / (sqrt(t * t + 1));
     p.s = t * p.c;
 
-    printf("before: %d %d %f %f\n", p.i, p.j, p.c, p.s);
-    
     result = malloc(sizeof(struct rotation_mat_info));
 
     result->i = p.i;
@@ -664,17 +656,6 @@ static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_
 
     A_prime[p.i][p.j] = 0;
     A_prime[p.j][p.i] = 0;
-
-    printf("printing A PRIME\n");
-    for (x = 0; x < N; x++)
-    {
-        for (y = 0; y < N; y++)
-        {
-            printf("%d %d %f\t", x, y, A_prime[x][y]);
-        }
-        printf("\n");
-    }
-    
 }
 
 static double off(matrix A, int N)
@@ -780,7 +761,6 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
     for (i = 0; i < 100; i++)
     {
         p_info = *(get_p_info(A, N));
-        printf("after: %d %d %f %f\n", p_info.i, p_info.j, p_info.c, p_info.s);
         update_A_prime(A_prime, A, N, p_info);
         update_V(V, P, tmp, N, p_info);
         if (converges(A, A_prime, N) == 1)
