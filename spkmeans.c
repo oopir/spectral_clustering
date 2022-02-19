@@ -53,7 +53,8 @@ int read_input(PyObject *py_obj, point **c_arr, int dim1, int dim2)
         (*c_arr)[i] = malloc(sizeof(double) * dim2);
         if ((*c_arr)[i] == NULL)
         {
-
+            /* free the memory it already allocated, then finish */
+            matrix_free(c_arr, i);
             return -1;
         }
 
@@ -129,10 +130,7 @@ void free_clusters(struct cluster* clusters, int fail_index)
     free(clusters);
 }
 
-
-
-
-static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_iter, double eps)
+static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int max_iter, double eps)
 {
     /* declare variables */
     int     i,j;
@@ -247,16 +245,6 @@ static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_it
     return 0;
 }
 
-
-
-/* ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------ */
-
-
-
 static PyObject* fit(PyObject *self, PyObject *args)
 {
     PyObject *initial_mu_obj;
@@ -285,7 +273,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
 
 
     /* perform algorithm */
-    do_work(datapoints, initial_mu, N, d, K, max_iter, eps);
+    get_clusters(datapoints, initial_mu, N, d, K, max_iter, eps);
 
 
     /* return chosen centroids */
