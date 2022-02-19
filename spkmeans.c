@@ -27,10 +27,13 @@ struct rotation_mat_info {
     int i;  int j;  double c;  double s;
 } ;
 
+static void matrix_free(matrix *mat, int num_of_rows);
+
 /*  functions that are not exposed */
 
 /* populate an array of points based on a python-object */
 /* input: py_obj is a 1d-list, representing a 2d-list with dimensions dim1 x dim2 */
+/* read_input is "free"-safe! Even if it returns -1, there's no mess to clean up */
 int read_input(PyObject *py_obj, point **c_arr, int dim1, int dim2)
 {
     int i,j;
@@ -50,6 +53,7 @@ int read_input(PyObject *py_obj, point **c_arr, int dim1, int dim2)
         (*c_arr)[i] = malloc(sizeof(double) * dim2);
         if ((*c_arr)[i] == NULL)
         {
+
             return -1;
         }
 
@@ -115,42 +119,6 @@ int not_converge(point* mu, point* prev_mu, double eps, int K, int d)
     return 0;
 }
 
-
-/* free mu & prev_mu:
-    - if allocation failed, the failed allocation was on index "**_fail_index"
-    - to free only mu / only prev_mu , use NULL,0 for the other parameters */
-void free_mu(point *mu, point *prev_mu, int mu_fail_index, int prev_mu_fail_index)
-{
-    int i;
-    for (i = 0; i < mu_fail_index; i++)
-    {
-        free(mu[i]);
-    }
-    for (i = 0; i < prev_mu_fail_index; i++)
-    {
-        free(prev_mu[i]);
-    }
-    
-    if (mu != NULL)
-    {
-        free(mu);
-    }
-    if (prev_mu != NULL)
-    {
-        free(prev_mu);
-    }
-}
-
-void free_datapoints(point *datapoints, int fail_index)
-{
-    int i;
-    for (i = 0; i < fail_index; i++)
-    {
-        free(datapoints[i]);
-    }
-    free(datapoints);
-}
-
 void free_clusters(struct cluster* clusters, int fail_index)
 {
     int i;
@@ -183,7 +151,7 @@ static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_it
     if (clusters == NULL)
     {
         printf("An Error Has Occurred");
-        free_datapoints(datapoints, info.N);
+        matrix_free(&datapoints, info.N); /* free_datapoints(datapoints, info.N); */
         return 1;
     }
 
@@ -193,7 +161,7 @@ static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_it
         if (clusters[i].sum == NULL)
         {            
             printf("An Error Has Occurred");
-            free_datapoints(datapoints, info.N);
+            matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
             free_clusters(clusters, i);
             return 1;
         }
@@ -204,9 +172,9 @@ static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_it
     if (prev_mu == NULL)
     {            
         printf("An Error Has Occurred");
-        free_datapoints(datapoints, info.N);
+        matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
         free_clusters(clusters, argum.K);
-        free_mu(mu, prev_mu, K, -1);
+        matrix_free(&mu, K); /* free_mu(mu, prev_mu, K, -1); */
         return 1;
     }
 
@@ -216,9 +184,10 @@ static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_it
         if (prev_mu[i] == NULL)
         {            
             printf("An Error Has Occurred");
-            free_datapoints(datapoints, info.N);
+            matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
             free_clusters(clusters, argum.K);
-            free_mu(mu, prev_mu, K, i);
+            matrix_free(&mu, K); /* free_mu(mu, prev_mu, K, i); */
+            matrix_free(&prev_mu, i); /* free_datapoints(prev_mu, i); */
             return 1;
         }   
     }
@@ -271,9 +240,9 @@ static int do_work(point *datapoints, point *mu, int N, int d, int K, int max_it
    }
 
     /* free memory EXCEPT MU (will be freed in "fit") */
-    free_datapoints(datapoints, info.N);
+    matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
     free_clusters(clusters, argum.K);
-    free_mu(NULL, prev_mu, 0, argum.K);
+    matrix_free(&prev_mu, argum.K);  /* free_mu(NULL, prev_mu, 0, argum.K); */
 
     return 0;
 }
@@ -334,7 +303,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
         PyList_SetItem(returned_list, i, mu_i);
     }
 
-    free_mu(initial_mu, NULL, K, 0);
+    matrix_free(&initial_mu, K);  /* free_mu(initial_mu, NULL, K, 0); */
 
     return returned_list;
 }

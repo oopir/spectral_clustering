@@ -16,6 +16,11 @@
     -conversion from matrix to python-obj
 
 @ malloc day !
+
+    @ left-overs to fi from ex2:
+        -change do-work's name
+        -take into account do-work's return value !!!!!
+
     -make sure we always free stuff after the function ends
     -make sure we always free stuff if allocation failed mid-way
     -There's something we didn't account for:
@@ -29,3 +34,6 @@
 
     (*) function with changing number of arguments:
         https://www.tutorialspoint.com/cprogramming/c_variable_arguments.htm
+
+
+@ output: make sure there's only 1 empty line at the end, not 2
