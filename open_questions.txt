@@ -12,3 +12,5 @@
 ------------------------------- TODO - IMPORTANT ---------------------------------
 
 @ output: make sure there's only 1 empty line at the end, not 2
+
+@ remove "ex2_read_args" ?
