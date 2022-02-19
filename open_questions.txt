@@ -11,29 +11,4 @@
 
 ------------------------------- TODO - IMPORTANT ---------------------------------
 
-@ reuse new generic code instead of exercise 2 old code, wherever we see fit.
-    -matrix malloc
-    -conversion from matrix to python-obj
-
-@ malloc day !
-
-    @ left-overs to fi from ex2:
-        -change do-work's name
-        -take into account do-work's return value !!!!!
-
-    -make sure we always free stuff after the function ends
-    -make sure we always free stuff if allocation failed mid-way
-    -There's something we didn't account for:
-        when a function mallocs 2 (or more) matrices,
-        if the failure is in the 'n'th matrix,
-        we need to free matrices 1,...,(n-1) before exiting!
-
-    @ bug in exercise 2 - read_input:
-    if read_input fails at memory allocation *mid-operation*, 
-    it does not free the memory that it did allocate before the failure.
-
-    (*) function with changing number of arguments:
-        https://www.tutorialspoint.com/cprogramming/c_variable_arguments.htm
-
-
 @ output: make sure there's only 1 empty line at the end, not 2

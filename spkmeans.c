@@ -29,7 +29,15 @@ struct rotation_mat_info {
 
 static void matrix_free(matrix *mat, int num_of_rows);
 
-/*  functions that are not exposed */
+
+
+/*
+----------------------------------------------------------------------- 
+-----------------------------EX2 CODE---------------------------------- 
+-----------------------------------------------------------------------
+*/
+
+
 
 /* populate an array of points based on a python-object */
 /* input: py_obj is a 1d-list, representing a 2d-list with dimensions dim1 x dim2 */
@@ -150,6 +158,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
     {
         printf("An Error Has Occurred");
         matrix_free(&datapoints, info.N); /* free_datapoints(datapoints, info.N); */
+        matrix_free(&mu, K);
         return 1;
     }
 
@@ -160,6 +169,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
         {            
             printf("An Error Has Occurred");
             matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
+            matrix_free(&mu, K);
             free_clusters(clusters, i);
             return 1;
         }
@@ -267,13 +277,19 @@ static PyObject* fit(PyObject *self, PyObject *args)
     if (read_input(initial_mu_obj, &initial_mu, K, d) == -1 || 
         read_input(datapoints_obj, &datapoints, N, d) == -1)
     {
+        if (initial_mu != NULL)
+            matrix_free(&initial_mu, K);
+        if (datapoints != NULL)
+            matrix_free(&datapoints, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
 
 
     /* perform algorithm */
-    get_clusters(datapoints, initial_mu, N, d, K, max_iter, eps);
+    if (get_clusters(datapoints, initial_mu, N, d, K, max_iter, eps) == 1)
+        exit(1);
 
 
     /* return chosen centroids */
@@ -374,6 +390,8 @@ static void matrix_free(matrix *mat, int num_of_rows)
     free((*mat));
 }
 
+
+
 static PyObject* wam(PyObject *self, PyObject *args)
 {
     PyObject *datapoints_obj, *result;
@@ -400,6 +418,8 @@ static PyObject* wam(PyObject *self, PyObject *args)
     /* allocate wam */
     if (matrix_malloc(&wam, N, N) == -1)
     {
+        matrix_free(&datapoints, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -449,6 +469,8 @@ static PyObject* ddg(PyObject *self, PyObject *args)
     /* allocate ddg */
     if (matrix_malloc(&ddg, N, N) == -1)
     {
+        matrix_free(&wam, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -489,8 +511,14 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
 
     /* copy input from python objects into c arrays 
        (read_input returns -1 if function failed) */
-    if ((read_input(wam_obj, &wam, N, N) == -1) || (read_input(ddg_obj, &ddg, N, N) == -1)) 
+    if ((read_input(wam_obj, &wam, N, N) == -1) || 
+        (read_input(ddg_obj, &ddg, N, N) == -1)) 
     {
+        if (wam != NULL)
+            matrix_free(&wam, N);
+        if (ddg != NULL)
+            matrix_free(&ddg, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -500,6 +528,16 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
         (matrix_malloc(&tmp_mat, N, N) == -1) || 
         (matrix_malloc(&ddg_nhalf, N, N) == -1))
     {
+        matrix_free(&wam, N);
+        matrix_free(&ddg, N);
+
+        if (lnorm != NULL)
+            matrix_free(&lnorm, N);
+        if (tmp_mat != NULL)
+            matrix_free(&tmp_mat, N);
+        if (ddg_nhalf != NULL)
+            matrix_free(&ddg_nhalf, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -667,8 +705,10 @@ static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_
 static PyObject* jacobi(PyObject *self, PyObject *args)
 {
     PyObject *A_obj;
-    matrix A;
-    int N;
+    matrix A, A_prime, P, V, tmp;
+    double *eigenvalues;
+    int N,i, x, y;
+    struct rotation_mat_info p_info;
     
     /* parse arguments from python into our variables */
     if (!PyArg_ParseTuple(args, "Oi", &A_obj, &N))
@@ -687,16 +727,22 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
 
     /* ------------------------------------------------- */
 
-    matrix A_prime, P, V, tmp;
-    struct rotation_mat_info p_info;
-    int i, x, y;
-
     /* make necessary memory allocations for out matrices */
     if (matrix_malloc(&A_prime, N, N) == -1 || 
         matrix_malloc(&P, N, N) == -1 ||
         matrix_malloc(&V, N, N) == -1 ||
         matrix_malloc(&tmp, N, N))
     {
+        matrix_free(&A, N);
+        if (A_prime != NULL)
+            matrix_free(&A_prime, N);
+        if (P != NULL)
+            matrix_free(&P, N);
+        if (V != NULL)
+            matrix_free(&V, N);
+        if (tmp != NULL)
+            matrix_free(&tmp, N);
+
         printf("An Error has Occurred");
         return NULL;
     }
@@ -729,7 +775,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
 
 
     /* create a vector of eigenvalues */
-    double *eigenvalues = malloc(sizeof(double) * N);
+    eigenvalues = malloc(sizeof(double) * N);
     if (eigenvalues == NULL)
     {
         matrix_free(&A, N);
@@ -737,6 +783,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         matrix_free(&P, N);
         matrix_free(&V, N);
         matrix_free(&tmp, N);
+
         printf("An Error has Occurred");
         return NULL;
     }
@@ -898,6 +945,8 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     /* allocate transpose jacobi */
     if (matrix_malloc(&transpose_jacobi, N, N+1) == -1)
     {
+        matrix_free(&jacobi, N+1);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -910,6 +959,9 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     k = determine_k(jacobi, N, k);
     if (k == 1)
     {
+        matrix_free(&jacobi, N+1);
+        matrix_free(&transpose_jacobi, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -917,6 +969,9 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     /* allocate T */
     if (matrix_malloc(&T, N, k) == -1)
     {
+        matrix_free(&jacobi, N+1);
+        matrix_free(&transpose_jacobi, N);
+
         printf("An Error has Occurred");
         exit(1);
     }
@@ -936,11 +991,14 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     return result;
 }
 
+
+
 /*
 ----------------------------------------------------------------------- 
 -----------------------------API CODE----------------------------------
 -----------------------------------------------------------------------
 */
+
 
 
 static PyMethodDef capiMethods[] = {

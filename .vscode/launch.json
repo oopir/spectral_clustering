@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["3", "wam", "input_1.txt"]
+            "args": ["0", "spk", "data_for_testing\\compare\\inputs\\n_90_k_10_d_5_std_0.4.txt"]
         }
     ]
 }

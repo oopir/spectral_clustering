@@ -59,7 +59,7 @@ def ex2_read_args():
     return K, max_iter, eps, file_name_1, file_name_2
 
 
-def ex2_main(T):
+def kmeans_pp(T):
     np.random.seed(0)
 
     # parse arguments
@@ -121,7 +121,7 @@ def ex2_main(T):
     result = mykmeanssp.fit(np.array(initial_mu).flatten().tolist(), datapoints.flatten().tolist(), N, d, K, max_iter, eps)
     
     # format the output of the c function
-    data_str = "\n".join([",".join(["%.4f" % fl for fl in mu_i]) for mu_i in result]) + "\n"
+    data_str = "\n".join([",".join(["%.4f" % fl for fl in mu_i]) for mu_i in result])
     
     print(data_str)
 
@@ -153,7 +153,7 @@ def read_args():
 
 
 def pretty_print_mat(mat):
-        data_str = "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat]) + "\n"
+        data_str = "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat])
         print(data_str)
 
 
@@ -221,7 +221,7 @@ def main():
         jacobi_flat = sum(jacobi_output, [])
         
         T = mykmeanssp.get_input_for_kmeans(jacobi_flat, N, K)
-        ex2_main(T)
+        kmeans_pp(T)
 
 
     else:
