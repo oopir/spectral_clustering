@@ -36,6 +36,8 @@
 @ eigengap heuristic: if it chooses k=1 --> "An Error Has Occurred!"
     this is according to https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
 
+@ risk of division by 0 in "populate_T" (dividing by the norm)
+    maybe we should do a proper check and raise an error if necessary
 
 ------------------------------- TODO - IMPORTANT ---------------------------------
 

@@ -65,8 +65,11 @@ def ex2_main(T):
     # parse arguments
     K, max_iter, eps = len(T[0]), 300, 0.0
 
-    datapoints_w_ind = pd.DataFrame(T).insert(loc=0, column="a", value=range(K)).to_numpy()
-    datapoints       = T.to_numpy()
+    T_dataframe = pd.DataFrame(T)
+    T_dataframe.insert(loc=0, column="a", value=range(len(T)))
+    datapoints_w_ind = T_dataframe.to_numpy()
+
+    datapoints       = np.array(T)
 
     # validate arguments based on data files
     if len(datapoints) == 0 or K >= len(datapoints):
@@ -218,7 +221,6 @@ def main():
         jacobi_flat = sum(jacobi_output, [])
         
         T = mykmeanssp.get_input_for_kmeans(jacobi_flat, N, K)
-        
         ex2_main(T)
 
 

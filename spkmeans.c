@@ -864,17 +864,17 @@ static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
 
 static int determine_k(matrix jacobi, int N, int k)
 {
-    /* If k=0, return as is. Otherwise, perform heuristic */
+    /* If k!=0, return as is. Otherwise, perform heuristic */
     if (k != 0)
         return k;
 
     int argmax, i;
     double max;
-    argmax = 0;
 
+    argmax = 0;
     max = jacobi[0][1] - jacobi[0][0];
 
-    for (i = 1; i < N-1; i++)
+    for (i = 1; i < floor((N-1)/2) - 1; i++)
         if (jacobi[0][i+1] - jacobi[0][i] > max)
         {
             max = jacobi[0][i+1] - jacobi[0][i];
@@ -902,11 +902,15 @@ static void populate_T(matrix T, matrix jacobi, int N, int k)
         for (j = 0; j < k; j++)
             norm_i += pow(jacobi[i][j], 2);
         norm_i = sqrt(norm_i);
-        
+
+
         /* populate T_i */
+        /* if norm_i == 0, this is a zero vector, 
+        so T_i should be a zero vector.       
+        otherwise, we should 'normalize' T_i */
         for (j = 0; j < k; j++)
         {
-            T[i][j] = jacobi[i][j] / norm_i;
+            T[i-1][j] = norm_i == 0 ? 0 : jacobi[i][j] / norm_i;
         }
     }
 }
@@ -968,8 +972,8 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     result = matrix_to_python(T, N, k);
 
     /* free allocated memory */
-    matrix_free(&jacobi, N, N);
-    matrix_free(&transpose_jacobi, N, N);
+    matrix_free(&jacobi, N+1, N);
+    matrix_free(&transpose_jacobi, N, N+1);
     matrix_free(&T, N, k);
 
     return result;
