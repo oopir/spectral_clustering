@@ -1,50 +1,15 @@
-
-@ what to do with K, if the specified goal does not requires K?
-
-
-
-
-
 ------------------ logical contradictions in instruction files ------------------
 
 @ multilple files:
     -section 2.3 states "you can use functions implemented only in spkmeans.c"
     -but earlier instruction says we can create more .c files
 
-
-@ where to read args and file?
-    -both Python and C instructions say to read goal & file_name
-    -in the forum, rami said to read input ONLY in Python
-    -https://moodle.tau.ac.il/mod/forum/discuss.php?d=66417
-
-
-@ arguments to C api functions
-    -section 2.2 states the arguments to read from the C code
-    -section 2.3 states we can decide which args to send/receive from API functions
-    WHAT IS THE POINT OF SECTION 2.2 ???
-
-@ edges in graph
-    -section 1.1.1 says "only if Wij > 0, we define an edge between i,j"
-    -but the formula fora Wij ALWAYS returns a positive number
-    -eventually, after reading line 3 of 1.1.1, we concluded they know its always positive...
-
 @ convergence: when checking if smaller than epsilon, should we 
                 use absolute value on the difference or not?
 
 @ iterating on all matrix VS iteration on top "triangle" - argue later
 
-@ eigengap heuristic: if it chooses k=1 --> "An Error Has Occurred!"
-    this is according to https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
-
-@ risk of division by 0 in "populate_T" (dividing by the norm)
-    maybe we should do a proper check and raise an error if necessary
-
 ------------------------------- TODO - IMPORTANT ---------------------------------
-
-@ bug in exercise 2 - read_input:
-    if read_input fails at memory allocation *mid-operation*, 
-    it does not free the memory that it did allocate before the failure.
-
 
 @ reuse new generic code instead of exercise 2 old code, wherever we see fit.
     -matrix malloc
@@ -57,3 +22,10 @@
         when a function mallocs 2 (or more) matrices,
         if the failure is in the 'n'th matrix,
         we need to free matrices 1,...,(n-1) before exiting!
+
+    @ bug in exercise 2 - read_input:
+    if read_input fails at memory allocation *mid-operation*, 
+    it does not free the memory that it did allocate before the failure.
+
+    (*) function with changing number of arguments:
+        https://www.tutorialspoint.com/cprogramming/c_variable_arguments.htm

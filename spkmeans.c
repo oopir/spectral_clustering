@@ -343,7 +343,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
 
 /*
 ----------------------------------------------------------------------- 
------------------------------NEW CODE----------------------------------
+-----------------------------NEW CODE---------------------------------- 
 -----------------------------------------------------------------------
 */
 
@@ -407,10 +407,10 @@ static PyObject* matrix_to_python(matrix mat, int dim1, int dim2)
     return returned_list;
 }
 
-static void matrix_free(matrix *mat, int dim1, int dim2)
+static void matrix_free(matrix *mat, int num_of_rows)
 {
     int i;
-    for (i=0; i < dim1; i++)
+    for (i=0; i < num_of_rows; i++)
     {
         free((*mat)[i]);
     }
@@ -461,8 +461,8 @@ static PyObject* wam(PyObject *self, PyObject *args)
     result = matrix_to_python(wam, N, N);
 
     /* free allocated memory */
-    matrix_free(&wam, N, N);
-    matrix_free(&datapoints, N, d);
+    matrix_free(&wam, N);
+    matrix_free(&datapoints, N);
 
     return result;
 }
@@ -510,8 +510,8 @@ static PyObject* ddg(PyObject *self, PyObject *args)
     result = matrix_to_python(ddg, N, N);
 
     /* free allocated memory */
-    matrix_free(&wam, N, N);
-    matrix_free(&ddg, N, N);
+    matrix_free(&wam, N);
+    matrix_free(&ddg, N);
 
     return result;
 }
@@ -578,11 +578,11 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
     result = matrix_to_python(lnorm, N, N);
 
     /* free allocated memory */
-    matrix_free(&wam, N, N);
-    matrix_free(&ddg, N, N);
-    matrix_free(&ddg_nhalf, N, N);
-    matrix_free(&lnorm, N, N);
-    matrix_free(&tmp_mat, N, N);
+    matrix_free(&wam, N);
+    matrix_free(&ddg, N);
+    matrix_free(&ddg_nhalf, N);
+    matrix_free(&lnorm, N);
+    matrix_free(&tmp_mat, N);
 
 
     return result;
@@ -775,11 +775,11 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
     double *eigenvalues = malloc(sizeof(double) * N);
     if (eigenvalues == NULL)
     {
-        matrix_free(&A, N, N);
-        matrix_free(&A_prime, N, N);
-        matrix_free(&P, N, N);
-        matrix_free(&V, N, N);
-        matrix_free(&tmp, N, N);
+        matrix_free(&A, N);
+        matrix_free(&A_prime, N);
+        matrix_free(&P, N);
+        matrix_free(&V, N);
+        matrix_free(&tmp, N);
         printf("An Error has Occurred");
         return NULL;
     }
@@ -817,11 +817,11 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
 
 
     /* free allocated memory */
-    matrix_free(&A, N, N);
-    matrix_free(&A_prime, N, N);
-    matrix_free(&P, N, N);
-    matrix_free(&V, N, N);
-    matrix_free(&tmp, N, N);
+    matrix_free(&A, N);
+    matrix_free(&A_prime, N);
+    matrix_free(&P, N);
+    matrix_free(&V, N);
+    matrix_free(&tmp, N);
     free(eigenvalues);
 
     return returned_list;
@@ -972,9 +972,9 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     result = matrix_to_python(T, N, k);
 
     /* free allocated memory */
-    matrix_free(&jacobi, N+1, N);
-    matrix_free(&transpose_jacobi, N, N+1);
-    matrix_free(&T, N, k);
+    matrix_free(&jacobi, N+1);
+    matrix_free(&transpose_jacobi, N);
+    matrix_free(&T, N);
 
     return result;
 }
@@ -992,7 +992,7 @@ static PyMethodDef capiMethods[] = {
     { "ddg", (PyCFunction) ddg, METH_VARARGS, PyDoc_STR("compute diagonal degree matrix") },
     { "lnorm", (PyCFunction) lnorm, METH_VARARGS, PyDoc_STR("compute normed laplacian matrix") },
     { "jacobi", (PyCFunction) jacobi, METH_VARARGS, PyDoc_STR("compute eigenvalues and eigenvectors") },
-    { "get_input_for_kmeans", (PyCFunction) get_input_for_kmeans, METH_VARARGS, PyDoc_STR("compute eigenvalues and eigenvectors") },
+    { "get_input_for_kmeans", (PyCFunction) get_input_for_kmeans, METH_VARARGS, PyDoc_STR("compute matrix 'T' for kmeans++") },
     {NULL, NULL, 0, NULL}
 };
 
