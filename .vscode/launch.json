@@ -4,13 +4,21 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        // {
+        //     "name": "spkmeans launch config",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "program": "${file}",
+        //     "console": "integratedTerminal",
+        //     "args": ["0", "spk", "data_for_testing\\compare\\inputs\\n_90_k_10_d_5_std_0.4.txt"]
+        // }
         {
-            "name": "Python: Current File",
+            "name": "tester launch config",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["0", "spk", "data_for_testing\\compare\\inputs\\n_90_k_10_d_5_std_0.4.txt"]
+            "args": ["spkmeans.py", "test", "test\\outputs"]
         }
     ]
 }

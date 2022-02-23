@@ -14,3 +14,18 @@
 @ output: make sure there's only 1 empty line at the end, not 2
 
 @ remove "ex2_read_args" ?
+
+@ line 242 (get_clusters) - handle division by zero properly
+
+@ C functions that are exposed to the API --> return 1, instead of return NULL
+
+@ instead of creating D_nhalf , just perform calculations based on D
+
+@ last function in the part of api declerations (very last func in code)
+    1. return 1 instead of return NULL  
+    2. an error has occurred
+
+@ determine_k loop: the loop should stop at k < floor(n/2):
+    - the loop should INCLUDE the 'floor(n/2)' round (but we use '<')
+    - after discussion, we realized it was wrong to subtract 1 inside floor,
+        as well as outside
