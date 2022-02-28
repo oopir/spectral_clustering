@@ -240,7 +240,10 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
                 prev_mu[i][j] = mu[i][j];
 
                 /* BEWARE of DIVISION BY ZERO */
-                mu[i][j] = clusters[i].sum[j] / (double)clusters[i].size;
+                if ((double)clusters[i].size == 0)
+                    mu[i][j] = 0;
+                else
+                    mu[i][j] = clusters[i].sum[j] / (double)clusters[i].size;
             }
         }
 

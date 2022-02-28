@@ -24,10 +24,6 @@
 @ all matrices output - rami said "-0.0000" should be "0.0000" (NO NEGATIVES)
     - follow updates on forum thread! There's a chance they'll take it back (view almog's comment)
 
-@ last function in the part of api declerations (very last func in code)
-    1. return 1 instead of return NULL  
-    2. an error has occurred
-
 @ determine_k loop: the loop should stop at k < floor(n/2):
     - the loop should INCLUDE the 'floor(n/2)' round (but we use '<')
     - after discussion, we realized it was wrong to subtract 1 inside floor,
