@@ -269,7 +269,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "OOiiiid", &initial_mu_obj, &datapoints_obj, &N, &d, &K, &max_iter, &eps))
     {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* copy input from python objects into c arrays 
@@ -404,7 +404,7 @@ static PyObject* wam(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oii", &datapoints_obj, &N, &d))
     {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* copy input from python objects into c arrays 
@@ -456,7 +456,7 @@ static PyObject* ddg(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oi", &wam_obj, &N))
     {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* copy input from python objects into c arrays 
@@ -508,7 +508,7 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "OOi", &wam_obj, &ddg_obj, &N))
     {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* copy input from python objects into c arrays 
@@ -708,7 +708,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oi", &A_obj, &N))
     {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* copy input from python objects into c arrays 
@@ -738,7 +738,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
             matrix_free(&tmp, N);
 
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* initialize V as identity matrix */
@@ -780,7 +780,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         matrix_free(&tmp, N);
 
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
     for (i = 0; i < N; i++)
         eigenvalues[i] = A_prime[i][i];
@@ -926,7 +926,7 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Oii", &jacobi_obj, &N, &k))
     {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
 
     /* copy input from python objects into c arrays 
@@ -1019,7 +1019,7 @@ PyMODINIT_FUNC PyInit_mykmeanssp(void)
     m = PyModule_Create(&moduledef);
     if (!m) {
         printf("An Error Has Occurred\n");
-        return NULL;
+        exit(1);  
     }
     return m;
 }

@@ -24,10 +24,6 @@
 @ all matrices output - rami said "-0.0000" should be "0.0000" (NO NEGATIVES)
     - follow updates on forum thread! There's a chance they'll take it back (view almog's comment)
 
-@ C functions that are exposed to the API --> return 1, instead of return NULL
-
-@ instead of creating D_nhalf , just perform calculations based on D
-
 @ last function in the part of api declerations (very last func in code)
     1. return 1 instead of return NULL  
     2. an error has occurred
