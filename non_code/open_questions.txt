@@ -40,3 +40,7 @@
 @ jacobi input - check for final answer in forum
 
 @ make sure every line is below 80 characters long
+
+@ before submission, make sure we didnt ruin anything in testing
+    - check that output has ONLY one extra line
+    - remove debug prints everywhere

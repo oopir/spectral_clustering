@@ -21,7 +21,7 @@ def pretty_print_mat(mat):
     return "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat]) + "\n"        
 
 
-def generate_input_files(input_files_dir, num):
+def generate_input_files(input_files_dir, num=10):
     for i in range(1,num+1):
         N = random.randint(10, 1000)    
         k = random.randint(2, 10)

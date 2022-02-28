@@ -1,6 +1,9 @@
 
 fixed test cases to run on every file:
 
+- general input files
+    d = 1
+
 - general cases
     k = 1  (on all cases or in spk?)
     k >= N
@@ -21,6 +24,7 @@ fixed test cases to run on every file:
 
 
 - wam
+    maybe: k=1, k=0
 
 - ddg
 
