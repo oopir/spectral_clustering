@@ -156,7 +156,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
     clusters = malloc(argum.K * sizeof(struct cluster));
     if (clusters == NULL)
     {
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         matrix_free(&datapoints, info.N); /* free_datapoints(datapoints, info.N); */
         matrix_free(&mu, K);
         return 1;
@@ -167,7 +167,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
         clusters[i].sum = malloc(info.d * sizeof(double));
         if (clusters[i].sum == NULL)
         {            
-            printf("An Error Has Occurred");
+            printf("An Error Has Occurred\n");
             matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
             matrix_free(&mu, K);
             free_clusters(clusters, i);
@@ -179,7 +179,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
     prev_mu = malloc(argum.K * sizeof(point));
     if (prev_mu == NULL)
     {            
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
         free_clusters(clusters, argum.K);
         matrix_free(&mu, K); /* free_mu(mu, prev_mu, K, -1); */
@@ -191,7 +191,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
         prev_mu[i] = malloc(info.d * sizeof(double));
         if (prev_mu[i] == NULL)
         {            
-            printf("An Error Has Occurred");
+            printf("An Error Has Occurred\n");
             matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
             free_clusters(clusters, argum.K);
             matrix_free(&mu, K); /* free_mu(mu, prev_mu, K, i); */
@@ -268,7 +268,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
     /* parse arguments from python int our variables */
     if (!PyArg_ParseTuple(args, "OOiiiid", &initial_mu_obj, &datapoints_obj, &N, &d, &K, &max_iter, &eps))
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
@@ -282,7 +282,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
         if (datapoints != NULL)
             matrix_free(&datapoints, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -403,7 +403,7 @@ static PyObject* wam(PyObject *self, PyObject *args)
     /* parse arguments from python int our variables */
     if (!PyArg_ParseTuple(args, "Oii", &datapoints_obj, &N, &d))
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
@@ -411,7 +411,7 @@ static PyObject* wam(PyObject *self, PyObject *args)
        (read_input returns -1 if function failed) */
     if (read_input(datapoints_obj, &datapoints, N, d) == -1)
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -420,7 +420,7 @@ static PyObject* wam(PyObject *self, PyObject *args)
     {
         matrix_free(&datapoints, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -455,7 +455,7 @@ static PyObject* ddg(PyObject *self, PyObject *args)
     /* parse arguments from python int our variables */
     if (!PyArg_ParseTuple(args, "Oi", &wam_obj, &N))
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
@@ -463,7 +463,7 @@ static PyObject* ddg(PyObject *self, PyObject *args)
        (read_input returns -1 if function failed) */
     if (read_input(wam_obj, &wam, N, N) == -1)
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -472,7 +472,7 @@ static PyObject* ddg(PyObject *self, PyObject *args)
     {
         matrix_free(&wam, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -499,14 +499,15 @@ static PyObject* ddg(PyObject *self, PyObject *args)
 static PyObject* lnorm(PyObject *self, PyObject *args)
 {
     PyObject *ddg_obj, *wam_obj, *result;
-    matrix wam, ddg, ddg_nhalf, lnorm, tmp_mat;
+    matrix wam, ddg, lnorm, tmp_mat;
     int N;
-    int i,j,k;
+    int i,j;
+    double tmp;
     
     /* parse arguments from python int our variables */
     if (!PyArg_ParseTuple(args, "OOi", &wam_obj, &ddg_obj, &N))
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
@@ -520,14 +521,13 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
         if (ddg != NULL)
             matrix_free(&ddg, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
     /* allocate lnorm */
     if ((matrix_malloc(&lnorm, N, N) == -1) || 
-        (matrix_malloc(&tmp_mat, N, N) == -1) || 
-        (matrix_malloc(&ddg_nhalf, N, N) == -1))
+        (matrix_malloc(&tmp_mat, N, N) == -1))
     {
         matrix_free(&wam, N);
         matrix_free(&ddg, N);
@@ -536,25 +536,19 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
             matrix_free(&lnorm, N);
         if (tmp_mat != NULL)
             matrix_free(&tmp_mat, N);
-        if (ddg_nhalf != NULL)
-            matrix_free(&ddg_nhalf, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
-
-    /* populate ddg_nhalf */
-    /* ASSUMES ddg_nhalf is initialized with zeroes */
-    for (i = 0; i < N; i++)
-        ddg_nhalf[i][i] += ddg[i][i] == 0 ? 0 : (1 / sqrt(ddg[i][i]));
-
 
     /* populate tmp_mat */
     /* ASSUMES tmp_mat is initialized with zeroes */
     for (i = 0; i < N; i++)
         for (j = 0; j < N; j++)
-            for (k = 0; k < N; k++)
-                tmp_mat[i][j] += ddg_nhalf[i][k] * wam[k][j];
+        {
+            tmp = ddg[i][i] == 0 ? 0 : (1 / sqrt(ddg[i][i]));
+            tmp_mat[i][j] = tmp * wam[i][j];
+        }
                 
 
     /* populate lnorm */
@@ -563,8 +557,8 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
     {
         for (j = 0; j < N; j++)
         {
-            for (k = 0; k < N; k++)
-                lnorm[i][j] += tmp_mat[i][k] * ddg_nhalf[k][j];
+            tmp = ddg[j][j] == 0 ? 0 : (1 / sqrt(ddg[j][j]));
+            lnorm[i][j] = tmp_mat[i][j] * tmp;
         
             lnorm[i][j] = i == j ? 1 - lnorm[i][j] : -lnorm[i][j];
         }
@@ -576,7 +570,6 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
     /* free allocated memory */
     matrix_free(&wam, N);
     matrix_free(&ddg, N);
-    matrix_free(&ddg_nhalf, N);
     matrix_free(&lnorm, N);
     matrix_free(&tmp_mat, N);
 
@@ -714,7 +707,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
     /* parse arguments from python into our variables */
     if (!PyArg_ParseTuple(args, "Oi", &A_obj, &N))
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
@@ -722,7 +715,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
        (read_input returns -1 if function failed) */
     if (read_input(A_obj, &A, N, N) == -1)
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -744,11 +737,12 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         if (tmp != NULL)
             matrix_free(&tmp, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
     /* initialize V as identity matrix */
+    /* ASSUMES matrix is initialized with zeroes */
     for (x = 0; x < N; x++)
         V[x][x] = 1;
     
@@ -769,10 +763,10 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
             
         
     }    
-    /* A <-- A_prime */
+    /* A <-- A_prime
     for (x = 0; x < N; x++)
         for (y = 0; y < N; y++)
-            A[x][y] = A_prime[x][y];
+            A[x][y] = A_prime[x][y]; */
 
 
     /* create a vector of eigenvalues */
@@ -785,7 +779,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         matrix_free(&V, N);
         matrix_free(&tmp, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
     for (i = 0; i < N; i++)
@@ -879,7 +873,7 @@ static int determine_k(matrix jacobi, int N, int k)
     argmax = 0;
     max = jacobi[0][1] - jacobi[0][0];
 
-    for (i = 1; i < floor((N-1)/2) - 1; i++)
+    for (i = 1; i < floor(N/2); i++)
         if (jacobi[0][i+1] - jacobi[0][i] > max)
         {
             max = jacobi[0][i+1] - jacobi[0][i];
@@ -927,11 +921,11 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     PyObject *jacobi_obj, *result;
     matrix jacobi, transpose_jacobi, T;
     int N, k;
-    
+
     /* parse arguments from python int our variables */
     if (!PyArg_ParseTuple(args, "Oii", &jacobi_obj, &N, &k))
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
 
@@ -939,7 +933,7 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
        (read_input returns -1 if function failed) */
     if (read_input(jacobi_obj, &jacobi, N+1, N) == -1)
     {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
     
@@ -948,7 +942,7 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
     {
         matrix_free(&jacobi, N+1);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
     
@@ -958,12 +952,13 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
 
     /* determine new K */
     k = determine_k(jacobi, N, k);
+
     if (k == 1)
     {
         matrix_free(&jacobi, N+1);
         matrix_free(&transpose_jacobi, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -973,7 +968,7 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
         matrix_free(&jacobi, N+1);
         matrix_free(&transpose_jacobi, N);
 
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -1023,7 +1018,7 @@ PyMODINIT_FUNC PyInit_mykmeanssp(void)
     PyObject *m;
     m = PyModule_Create(&moduledef);
     if (!m) {
-        printf("An Error has Occurred");
+        printf("An Error Has Occurred\n");
         return NULL;
     }
     return m;

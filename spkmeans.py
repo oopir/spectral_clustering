@@ -121,9 +121,7 @@ def kmeans_pp(T):
     result = mykmeanssp.fit(np.array(initial_mu).flatten().tolist(), datapoints.flatten().tolist(), N, d, K, max_iter, eps)
     
     # format the output of the c function
-    data_str = "\n".join([",".join(["%.4f" % fl for fl in mu_i]) for mu_i in result]) + "\n"
-    
-    print(data_str)
+    pretty_print_mat(result)
 
 
 # ----------------------------------------------------------------- #
@@ -153,7 +151,7 @@ def read_args():
 
 
 def pretty_print_mat(mat):
-        data_str = "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat]) + "\n"
+        data_str = "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat]) # + "\n"
         print(data_str)
 
 
