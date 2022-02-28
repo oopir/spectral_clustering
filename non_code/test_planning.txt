@@ -1,0 +1,33 @@
+
+fixed test cases to run on every file:
+
+- general cases
+    k = 1  (on all cases or in spk?)
+    k >= N
+    k = 0  (on all cases or in spk? almog&leah allowed on all cases)
+    k as float value
+    k as negative int
+    k as negative float
+    k as NaN
+
+    filename that does not exist
+    filename with wrong extention
+
+    wrong order of arguments
+
+    missing an argument
+
+    # we can assume file is in correct format
+
+
+- wam
+
+- ddg
+
+- lnorm
+
+- jacobi
+
+- spk
+    k = 0
+
