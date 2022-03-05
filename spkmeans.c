@@ -841,7 +841,13 @@ static int cmpfunc (const void * a, const void * b)
     double *row_a = *((double **)a);
     double *row_b = *((double **)b);
     
-    return row_a[0] - row_b[0] <= 0 ? -1 : 1 ;
+    /* return row_a[0] - row_b[0] <= 0 ? -1 : 1 ; */
+    if (row_a[0] < row_b[0])
+        return -1;
+    if (row_b[0] < row_a[0])
+        return 1;
+    return 0;
+
 }
 
 static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
@@ -858,22 +864,7 @@ static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
         }
     }
 
-    /* qsort(transpose_jacobi, N, sizeof(double *), cmpfunc); */
-
-    /* sort transpose_jacobi's rows */
-    for (i = 0; i < N-1; i++)
-    {
-        for (j = i+1; j < N; j++)
-        {
-            if (transpose_jacobi[i][0] > transpose_jacobi[j][0]) 
-            {
-                tmp = transpose_jacobi[i];
-                transpose_jacobi[i] = transpose_jacobi[j];
-                transpose_jacobi[j] = tmp;
-            }
-        }
-    }
-    
+    qsort(transpose_jacobi, N, sizeof(double *), cmpfunc);
     
     /* converting back to original */
     for (i = 0; i < N+1; i++)
