@@ -428,13 +428,15 @@ static PyObject* wam(PyObject *self, PyObject *args)
     }
 
     /* populate wam */
-    /* ASSUMES ddg is initialized with zeroes */
+    /* ASSUMES wam is initialized with zeroes */
+    /* ASSUMES wam should be symmetric */
     for (i = 0; i < N; i++)
     {
-        for (j = 0; j < N; j++)
+        for (j = i; j < N; j++)
         {
             if (i != j)
                 wam[i][j] = exp(-0.5 * norm_of_diff(datapoints[i], datapoints[j], d, 1));
+            wam[j][i] = wam[i][j];
         }
     }
     
@@ -556,14 +558,17 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
 
     /* populate lnorm */
     /* ASSUMES lnorm is initialized with zeroes */
+    /* ASSUMES lnorm should be symmetric */
     for (i = 0; i < N; i++)
     {
-        for (j = 0; j < N; j++)
+        for (j = i; j < N; j++)
         {
             tmp = ddg[j][j] == 0 ? 0 : (1 / sqrt(ddg[j][j]));
             lnorm[i][j] = tmp_mat[i][j] * tmp;
         
             lnorm[i][j] = i == j ? 1 - lnorm[i][j] : -lnorm[i][j];
+
+            lnorm[j][i] = lnorm[i][j];
         }
     }
     

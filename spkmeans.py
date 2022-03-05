@@ -174,7 +174,6 @@ def main():
 
         lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
         pretty_print_mat(lnorm)
-        debug_sym_mat(lnorm)
     
     elif goal == "jacobi":
         wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)

@@ -25,6 +25,10 @@
 
 @ jacobi input - check for final answer in forum
 
+@ compare ourselves with updated script from leah
+
+@ decide if we want to make our own specific tests
+
 ------------------------------- DO BEFORE SUBMISSION ------------------------------
 
 @ go over forum again!  (might take A LOT OF TIME)
