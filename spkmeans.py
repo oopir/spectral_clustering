@@ -98,37 +98,34 @@ def kmeans_pp(T):
     pretty_print_mat(result)
 
 
-def debug_sym_mat(mat):
-    for i in range(len(mat)):
-        for j in range(len(mat[0])):
-            if (mat[i][j] != mat[j][i]):
-                print("the following matrix is not symmetric:\t %d,%d" % (i, j))
-                print(mat)
-                return
-
-
 # ----------------------------------------------------------------- #
 # ------------------------ end of ex2 code ------------------------ #
 # ----------------------------------------------------------------- #
 
 
 def read_args():
-    # if args are invalid, report it 
-    # THIS CODE DOES NOT CHECK (k < N) - this is done in main
+    # validate all arguments EXCEPT K
     if (len(sys.argv) != 4 or \
-        not is_int(sys.argv[1]) or \
         sys.argv[2] not in ["spk", "wam", "ddg", "lnorm", "jacobi"] or \
         not (sys.argv[3].endswith(".txt") or sys.argv[3].endswith(".csv"))):
             print("Invalid Input!")
-            sys.exit(1)
-        
-    K         = int(sys.argv[1])
-    goal      = sys.argv[2]
-    file_name = sys.argv[3]
+            sys.exit(1)    
+    
+    file_name = sys.argv[-1]
+    goal      = sys.argv[-2]
+    K         = None
 
-    if (K < 0 or K == 1):
-        print("Invalid Input!")
-        sys.exit(1)
+    # if goal is spk, CHECK K is valid & read it
+    if (goal == 'spk'):
+        if (not is_int(sys.argv[1])):
+            print("Invalid Input!")
+            sys.exit(1)    
+
+        K = int(sys.argv[1])    
+
+        if (K < 0 or K == 1):
+            print("Invalid Input!")
+            sys.exit(1)
 
     return K, goal, file_name
 
@@ -144,7 +141,7 @@ def main():
     datapoints = pd.read_csv(file_name, header=None).to_numpy()
 
     # validate arguments based on data files
-    if len(datapoints) == 0 or K >= len(datapoints):
+    if len(datapoints) == 0 or (goal == "spk" and K >= len(datapoints)):
         print("Invalid Input!")
         exit(1)
     
@@ -202,6 +199,9 @@ def main():
         jacobi_flat = sum(jacobi_output, [])
         
         T = mykmeanssp.get_input_for_kmeans(jacobi_flat, N, K)
+        # if (K == 2 and "input_4" in file_name):
+        #     pretty_print_mat(T)
+        #     print("~" * 50)
         kmeans_pp(T)
 
 

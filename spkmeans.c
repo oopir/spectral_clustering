@@ -847,6 +847,7 @@ static int cmpfunc (const void * a, const void * b)
 static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
 {
     int i,j;
+    double *tmp;
 
     /* create transpose_jacobi */
     for (i = 0; i < N; i++)
@@ -857,7 +858,22 @@ static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
         }
     }
 
-    qsort(transpose_jacobi, N, sizeof(double *), cmpfunc);
+    /* qsort(transpose_jacobi, N, sizeof(double *), cmpfunc); */
+
+    /* sort transpose_jacobi's rows */
+    for (i = 0; i < N-1; i++)
+    {
+        for (j = i+1; j < N; j++)
+        {
+            if (transpose_jacobi[i][0] > transpose_jacobi[j][0]) 
+            {
+                tmp = transpose_jacobi[i];
+                transpose_jacobi[i] = transpose_jacobi[j];
+                transpose_jacobi[j] = tmp;
+            }
+        }
+    }
+    
     
     /* converting back to original */
     for (i = 0; i < N+1; i++)
