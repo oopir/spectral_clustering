@@ -25,12 +25,17 @@ fixed test cases to run on every file:
 
 - wam
     maybe: k=1, k=0
+    make sure it works with positive k
 
 - ddg
 
+    make sure it works with positive k
+
 - lnorm
+    make sure it works with positive k
 
 - jacobi
+    make sure it works with positive k
 
 - spk
     k = 0

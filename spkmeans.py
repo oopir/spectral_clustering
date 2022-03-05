@@ -33,32 +33,6 @@ def is_int(st):
         return False
 
 
-def ex2_read_args():
-    # validate input format, exit if invalid
-    if (len(sys.argv) != 5 and len(sys.argv) != 6) or \
-        not sys.argv[1].isnumeric() or \
-        (len(sys.argv) == 6 and not sys.argv[2].isnumeric()) or \
-        not is_float(sys.argv[-3]) or \
-        not (sys.argv[-1].endswith(".txt") or sys.argv[-1].endswith(".csv")) or \
-        not (sys.argv[-2].endswith(".txt") or sys.argv[-2].endswith(".csv")):
-        print("Invalid Input!")
-        sys.exit(1)
-
-    max_iter = 300
-    K = int(sys.argv[1])
-    eps = float(sys.argv[-3])
-    file_name_1 = sys.argv[-2]
-    file_name_2 = sys.argv[-1]
-    if (len(sys.argv) == 6):
-        max_iter = int(sys.argv[2])
-    
-    if (K < 2 or eps < 0 or max_iter < 0):
-        print("Invalid Input!")
-        sys.exit(1)
-
-    return K, max_iter, eps, file_name_1, file_name_2
-
-
 def kmeans_pp(T):
     np.random.seed(0)
 
@@ -122,6 +96,15 @@ def kmeans_pp(T):
     
     # format the output of the c function
     pretty_print_mat(result)
+
+
+def debug_sym_mat(mat):
+    for i in range(len(mat)):
+        for j in range(len(mat[0])):
+            if (mat[i][j] != mat[j][i]):
+                print("the following matrix is not symmetric:\t %d,%d" % (i, j))
+                print(mat)
+                return
 
 
 # ----------------------------------------------------------------- #
@@ -191,6 +174,7 @@ def main():
 
         lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
         pretty_print_mat(lnorm)
+        debug_sym_mat(lnorm)
     
     elif goal == "jacobi":
         wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
