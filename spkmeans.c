@@ -662,7 +662,7 @@ static double off(matrix A, int N)
 static int converges(matrix A, matrix A_prime, int N)
 {
     /* https://moodle.tau.ac.il/mod/forum/discuss.php?d=82078 */
-    return (off(A, N) - off(A_prime, N) <= pow(10,-15));
+    return (off(A, N) - off(A_prime, N) <= pow(10,-5));
 }
 
 static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_info p_info)
