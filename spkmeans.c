@@ -661,6 +661,7 @@ static double off(matrix A, int N)
 
 static int converges(matrix A, matrix A_prime, int N)
 {
+    /* https://moodle.tau.ac.il/mod/forum/discuss.php?d=82078 */
     return (off(A, N) - off(A_prime, N) <= pow(10,-15));
 }
 
@@ -710,6 +711,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
     matrix A, A_prime, P, V, tmp;
     double *eigenvalues;
     int N,i, x, y;
+    int is_diagonal;
     struct rotation_mat_info p_info;
     
     /* parse arguments from python into our variables */
@@ -726,6 +728,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         printf("An Error Has Occurred\n");
         exit(1);
     }
+    
 
     /* ------------------------------------------------- */
 
@@ -749,35 +752,7 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         exit(1);  
     }
 
-    /* initialize V as identity matrix */
-    /* ASSUMES matrix is initialized with zeroes */
-    for (x = 0; x < N; x++)
-        V[x][x] = 1;
-    
-
-    /* perform algorithm */
-    for (i = 0; i < 100; i++)
-    {
-        update_p_info(A, N, &p_info);
-        update_A_prime(A_prime, A, N, p_info);
-        update_V(V, P, tmp, N, p_info);
-        if (converges(A, A_prime, N) == 1)
-            break;
-
-        /* A <-- A_prime */
-        for (x = 0; x < N; x++)
-            for (y = 0; y < N; y++)
-                A[x][y] = A_prime[x][y];
-            
-        
-    }    
-    /* A <-- A_prime
-    for (x = 0; x < N; x++)
-        for (y = 0; y < N; y++)
-            A[x][y] = A_prime[x][y]; */
-
-
-    /* create a vector of eigenvalues */
+    /* allocate a vector of eigenvalues */
     eigenvalues = malloc(sizeof(double) * N);
     if (eigenvalues == NULL)
     {
@@ -790,8 +765,54 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
         printf("An Error Has Occurred\n");
         exit(1);  
     }
-    for (i = 0; i < N; i++)
-        eigenvalues[i] = A_prime[i][i];
+
+
+    /* initialize V as identity matrix */
+    /* ASSUMES matrix is initialized with zeroes */
+    for (x = 0; x < N; x++)
+        V[x][x] = 1;
+
+
+    /* if A is already a diagonal matrix - do not perform the algorithm */
+    is_diagonal = 1;
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+            if (x != y && fabs(A[x][y]) > 0)
+                is_diagonal = 0;
+    
+
+    if (!is_diagonal)
+    {
+        /* perform algorithm */
+        for (i = 0; i < 100; i++)
+        {
+            update_p_info(A, N, &p_info);
+            update_A_prime(A_prime, A, N, p_info);
+            update_V(V, P, tmp, N, p_info);
+            if (converges(A, A_prime, N) == 1)
+                break;
+
+            /* A <-- A_prime */
+            for (x = 0; x < N; x++)
+                for (y = 0; y < N; y++)
+                    A[x][y] = A_prime[x][y];
+        }
+
+        /* assign eigenvalues from algorithm's output */
+        for (i = 0; i < N; i++)
+            eigenvalues[i] = A_prime[i][i];
+    }    
+    else
+    {
+        for (i = 0; i < N; i++)
+            eigenvalues[i] = A[i][i];
+    }
+    /* A <-- A_prime
+    for (x = 0; x < N; x++)
+        for (y = 0; y < N; y++)
+            A[x][y] = A_prime[x][y]; */
+
+
     
     /* ------------------------------------------------- */
 
@@ -853,8 +874,7 @@ static int cmpfunc (const void * a, const void * b)
 static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
 {
     int i,j;
-    double *tmp;
-
+    
     /* create transpose_jacobi */
     for (i = 0; i < N; i++)
     {

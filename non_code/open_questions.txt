@@ -9,6 +9,13 @@
 
 @ iterating on all matrix VS iteration on top "triangle" - argue later
 
+-----------------------  test cases that dont work yet  --------------------------
+
+15 spk input_12
+7  spk input_2
+8  spk input_2
+15 spk input_2
+
 ------------------------------- TODO - IMPORTANT ---------------------------------
 
 @ look over things we left in whatsapp group to do next time
@@ -20,12 +27,7 @@
 
 @ we need to create a header file + compilation shel script
 
-@ all matrices output - rami said "-0.0000" should be "0.0000" (NO NEGATIVES)
-    - follow updates on forum thread! There's a chance they'll take it back (view almog's comment)
-
-@ jacobi input - check for final answer in forum
-
-@ compare ourselves with updated script from leah
+@ compare ourselves with *updated* script from leah
 
 @ decide if we want to make our own specific tests
 

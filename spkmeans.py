@@ -130,8 +130,25 @@ def read_args():
     return K, goal, file_name
 
 
-def pretty_print_mat(mat):
-        data_str = "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat]) # + "\n"
+def validate_jacobi_input_file(mat):
+    if mat.shape[0] != mat.shape[1]:
+        print("Invalid Input!")
+        exit(1)
+
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            if mat[i][j] != mat[j][i]:
+                print("Invalid Input!")
+                exit(1)
+
+    
+def pretty_print_mat(mat, is_jacobi=False):
+        first_line = ",".join(["%.4f" % fl for fl in mat[0]]) + "\n"
+        if is_jacobi:
+            first_line = first_line.replace("-0.0000", "0.0000")
+        
+        data_str = first_line + "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat[1:]]) # + "\n"
+
         print(data_str)
 
 
@@ -173,17 +190,21 @@ def main():
         pretty_print_mat(lnorm)
     
     elif goal == "jacobi":
-        wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
-        wam_flat = sum(wam, [])
+        # wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
+        # wam_flat = sum(wam, [])
         
-        ddg = mykmeanssp.ddg(wam_flat, N)
-        ddg_flat = sum(ddg, [])
+        # ddg = mykmeanssp.ddg(wam_flat, N)
+        # ddg_flat = sum(ddg, [])
 
-        lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
-        lnorm_flat = sum(lnorm, [])
+        # lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
+        # lnorm_flat = sum(lnorm, [])
 
-        jacobi_output = mykmeanssp.jacobi(lnorm_flat, N)
-        pretty_print_mat(jacobi_output)
+        # jacobi_output = mykmeanssp.jacobi(lnorm_flat, N)
+        # pretty_print_mat(jacobi_output)
+
+        validate_jacobi_input_file(datapoints)
+        jacobi_output = mykmeanssp.jacobi(datapoints.flatten().tolist(), N)
+        pretty_print_mat(jacobi_output, is_jacobi=True)
 
     elif goal == "spk":
         wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
