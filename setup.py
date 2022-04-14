@@ -1,8 +1,8 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 import numpy
 
 setup(name="mykmeanssp",
       version="1.0",
-      description="our c sp`kmeans implementation",
-      ext_modules=[Extension('mykmeanssp', sources=['spkmeans.c'])],
-      include_dirs=[numpy.get_include()])
+      description="our c spkmeans implementation",
+      packages=find_packages(),
+      ext_modules=[Extension('mykmeanssp', sources=['spkmeansmodule.c', 'spkmeans.c'])])
