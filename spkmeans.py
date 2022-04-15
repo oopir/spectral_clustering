@@ -95,7 +95,9 @@ def kmeans_pp(T):
 
     # ------ perform algorithm #2 - call c ext to calculate clusters ------ #
     
-    result = mykmeanssp.fit(np.array(initial_mu).flatten().tolist(), datapoints.flatten().tolist(), N, d, K, max_iter, eps)
+    result = mykmeanssp.fit(np.array(initial_mu).flatten().tolist(), \
+                            datapoints.flatten().tolist(),           \
+                            N, d, K, max_iter, eps)
     
     # format the output of the c function
     pretty_print_mat(result)
@@ -171,7 +173,9 @@ def pretty_print_mat(mat, is_jacobi=False):
     if is_jacobi:
         first_line = first_line.replace("-0.0000", "0.0000")
     
-    data_str = first_line + "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat[1:]]) # + "\n"
+    data_str = first_line + \
+                "\n".join([",".join(["%.4f" % fl for fl in mat_i]) \
+                    for mat_i in mat[1:]]) # + "\n"
 
     print(data_str)
 

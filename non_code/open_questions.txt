@@ -16,15 +16,12 @@
 
 @ maybe deal with duplicate matrix_malloc, matrix_free
 
-@ finish documentation: write a summary for every function
-
 @ go over forum again!
     - we already checked posts up to 14/04/2022
 
 @ make sure every line is below 80 characters long
 
 @ make sure we didnt ruin anything in testing
-    - check that output has ONLY one extra line
     - remove debug prints everywhere
 
 @ run final test against Leah's tester

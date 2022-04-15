@@ -84,7 +84,8 @@ int read_input(PyObject *py_obj, point **c_arr, int dim1, int dim2)
         - clusters : the clusters struct 
         - mu : the current centroids
         - K, d : number of clusters, dimension of datapoint  */
-void assign_to_cluster(point xi, struct cluster* clusters, point* mu, int K, int d)
+void assign_to_cluster(point xi, struct cluster* clusters, 
+                       point* mu, int K, int d)
 {
     int j;
     int argmin = 0;
@@ -138,7 +139,8 @@ void free_clusters(struct cluster* clusters, int fail_index)
 
 /*  Performs the whole kmeans algorithm, given the 
     datapoints and the initial centroids        */
-static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int max_iter, double eps)
+static int get_clusters(point *datapoints, point *mu, int N, int d, 
+                        int K, int max_iter, double eps)
 {
     /* declare variables */
     int     i,j;
@@ -150,14 +152,14 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
     struct cluster        *clusters;
     
 
-    /* --------------------- NON-INPUT MEMORY ALLOCATION ---------------------------- */
-    /* ---------------------    (mu is given as input)   ---------------------------- */
+    /* ---------------- NON-INPUT MEMORY ALLOCATION ----------------------- */
+    /* ----------------    (mu is given as input)   ----------------------- */
 
     clusters = malloc(argum.K * sizeof(struct cluster));
     if (clusters == NULL)
     {
         printf("An Error Has Occurred\n");
-        matrix_free(&datapoints, info.N); /* free_datapoints(datapoints, info.N); */
+        matrix_free(&datapoints, info.N); 
         matrix_free(&mu, K);
         return 1;
     }
@@ -168,7 +170,7 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
         if (clusters[i].sum == NULL)
         {            
             printf("An Error Has Occurred\n");
-            matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
+            matrix_free(&datapoints, info.N);  
             matrix_free(&mu, K);
             free_clusters(clusters, i);
             return 1;
@@ -180,9 +182,9 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
     if (prev_mu == NULL)
     {            
         printf("An Error Has Occurred\n");
-        matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
+        matrix_free(&datapoints, info.N);  
         free_clusters(clusters, argum.K);
-        matrix_free(&mu, K); /* free_mu(mu, prev_mu, K, -1); */
+        matrix_free(&mu, K); 
         return 1;
     }
 
@@ -192,10 +194,10 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
         if (prev_mu[i] == NULL)
         {            
             printf("An Error Has Occurred\n");
-            matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
+            matrix_free(&datapoints, info.N);  
             free_clusters(clusters, argum.K);
-            matrix_free(&mu, K); /* free_mu(mu, prev_mu, K, i); */
-            matrix_free(&prev_mu, i); /* free_datapoints(prev_mu, i); */
+            matrix_free(&mu, K);
+            matrix_free(&prev_mu, i); 
             return 1;
         }   
     }
@@ -214,7 +216,8 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
 
 
     /* perform algorithm */
-    while (curr_iter < argum.max_iter && not_converge(mu, prev_mu, argum.eps, argum.K, info.d))
+    while (curr_iter < argum.max_iter && 
+           not_converge(mu, prev_mu, argum.eps, argum.K, info.d))
     {
        /* reinitialize clusters */
         for (i = 0; i < argum.K; i++)
@@ -251,9 +254,9 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
    }
 
     /* free memory EXCEPT MU (will be freed in "fit") */
-    matrix_free(&datapoints, info.N);  /* free_datapoints(datapoints, info.N); */
+    matrix_free(&datapoints, info.N);  
     free_clusters(clusters, argum.K);
-    matrix_free(&prev_mu, argum.K);  /* free_mu(NULL, prev_mu, 0, argum.K); */
+    matrix_free(&prev_mu, argum.K);  
 
     return 0;
 }
@@ -271,7 +274,8 @@ static PyObject* fit(PyObject *self, PyObject *args)
     int i,j;
 
     /* parse arguments from python int our variables */
-    if (!PyArg_ParseTuple(args, "OOiiiid", &initial_mu_obj, &datapoints_obj, &N, &d, &K, &max_iter, &eps))
+    if (!PyArg_ParseTuple(args, "OOiiiid", &initial_mu_obj, &datapoints_obj, 
+                          &N, &d, &K, &max_iter, &eps))
     {
         printf("An Error Has Occurred\n");
         exit(1);  
@@ -299,7 +303,8 @@ static PyObject* fit(PyObject *self, PyObject *args)
 
     /* return chosen centroids */
     /* code is based on this stack-overflow thread:
-        https://stackoverflow.com/questions/50668981/how-to-return-a-list-of-ints-in-python-c-api-extension-with-pylist/50683462 */
+        https://stackoverflow.com/questions/50668981/how-to-return-
+        a-list-of-ints-in-python-c-api-extension-with-pylist/50683462 */
     PyObject* returned_list = PyList_New(K);
     for (i = 0; i < K; ++i)
     {
@@ -312,7 +317,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
         PyList_SetItem(returned_list, i, mu_i);
     }
 
-    matrix_free(&initial_mu, K);  /* free_mu(initial_mu, NULL, K, 0); */
+    matrix_free(&initial_mu, K);  
 
     return returned_list;
 }
@@ -369,7 +374,8 @@ static int matrix_malloc(matrix *mat, int dim1, int dim2)
 static PyObject* matrix_to_python(matrix mat, int dim1, int dim2)
 {
     /* code is based on this stack-overflow thread:
-        https://stackoverflow.com/questions/50668981/how-to-return-a-list-of-ints-in-python-c-api-extension-with-pylist/50683462 */
+        https://stackoverflow.com/questions/50668981/how-to-return-
+        a-list-of-ints-in-python-c-api-extension-with-pylist/50683462 */
         
     int i,j;
     PyObject* returned_list = PyList_New(dim1);
@@ -742,12 +748,18 @@ static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
 
 
 static PyMethodDef capiMethods[] = {
-    { "fit", (PyCFunction) fit, METH_VARARGS, PyDoc_STR("kmeans algorithm given initial centroids") },
-    { "wam", (PyCFunction) wam, METH_VARARGS, PyDoc_STR("compute weighted adjacency matrix") },
-    { "ddg", (PyCFunction) ddg, METH_VARARGS, PyDoc_STR("compute diagonal degree matrix") },
-    { "lnorm", (PyCFunction) lnorm, METH_VARARGS, PyDoc_STR("compute normed laplacian matrix") },
-    { "jacobi", (PyCFunction) jacobi, METH_VARARGS, PyDoc_STR("compute eigenvalues and eigenvectors") },
-    { "get_input_for_kmeans", (PyCFunction) get_input_for_kmeans, METH_VARARGS, PyDoc_STR("compute matrix 'T' for kmeans++") },
+    { "fit", (PyCFunction) fit, METH_VARARGS, 
+        PyDoc_STR("kmeans algorithm given initial centroids") },
+    { "wam", (PyCFunction) wam, METH_VARARGS, 
+        PyDoc_STR("compute weighted adjacency matrix") },
+    { "ddg", (PyCFunction) ddg, METH_VARARGS, 
+        PyDoc_STR("compute diagonal degree matrix") },
+    { "lnorm", (PyCFunction) lnorm, METH_VARARGS, 
+        PyDoc_STR("compute normed laplacian matrix") },
+    { "jacobi", (PyCFunction) jacobi, METH_VARARGS, 
+        PyDoc_STR("compute eigenvalues and eigenvectors") },
+    { "get_input_for_kmeans", (PyCFunction) get_input_for_kmeans, 
+        METH_VARARGS, PyDoc_STR("compute matrix 'T' for kmeans++") },
     {NULL, NULL, 0, NULL}
 };
 

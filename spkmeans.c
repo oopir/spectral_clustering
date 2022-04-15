@@ -128,7 +128,7 @@ matrix func_wam(point *datapoints, int N, int d)
     {
         matrix_free(&datapoints, N);
 
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -140,7 +140,9 @@ matrix func_wam(point *datapoints, int N, int d)
         for (j = i; j < N; j++)
         {
             if (i != j)
-                wam[i][j] = exp(-0.5 * norm_of_diff(datapoints[i], datapoints[j], d, 1));
+                wam[i][j] = exp(-0.5 * norm_of_diff(datapoints[i], 
+                                                    datapoints[j], 
+                                                    d, 1));
             wam[j][i] = wam[i][j];
         }
     }
@@ -160,7 +162,7 @@ matrix func_ddg(matrix wam, int N)
     {
         matrix_free(&wam, N);
 
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -199,7 +201,7 @@ matrix func_lnorm(matrix wam, matrix ddg, int N)
         if (D_half != NULL)
             matrix_free(&D_half, N);
 
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);
     }
 
@@ -264,7 +266,8 @@ static void update_p_info(matrix A, int N, struct rotation_mat_info *p)
 
 /*  Updates the mtarix A' according to the current matrix A
     and the current rotational matrix P                     */
-static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_info p)
+static void update_A_prime(matrix A_prime, matrix A, int N, 
+                           struct rotation_mat_info p)
 {
     int x,y,r;
 
@@ -328,7 +331,8 @@ static int converges(matrix A, matrix A_prime, int N)
         - tmp : a temporary matrix to be used in the algorithm (NxN)
         - p_info : a struct containing the info 
                    of the current rotational matrix                    */
-static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_info p_info)
+static void update_V(matrix V, matrix P, matrix tmp, int N, 
+                     struct rotation_mat_info p_info)
 {
     int x,y,k;
 
@@ -336,7 +340,8 @@ static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_
     for (x = 0; x < N; x++)
         for (y = 0; y < N; y++)
         {
-            if ((x == p_info.i && y == p_info.i) || (x == p_info.j && y == p_info.j))
+            if ((x == p_info.i && y == p_info.i) || 
+                (x == p_info.j && y == p_info.j))
                 P[x][y] = p_info.c;
             else
                 if (x == y)
@@ -397,7 +402,7 @@ matrix func_jacobi(matrix A, int N)
         if (jacobi != NULL)
             matrix_free(&jacobi, N+1);
 
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);  
     }
 
@@ -412,7 +417,7 @@ matrix func_jacobi(matrix A, int N)
         matrix_free(&tmp, N);
         matrix_free(&jacobi, N+1);
 
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         exit(1);  
     }
 
@@ -486,7 +491,8 @@ matrix func_jacobi(matrix A, int N)
         If the function returns info with N=-1 , 
         it means there was an allocation failure.
         In this case, d will hold the failiure-index */
-struct datapoint_info read_input_file(char* input_filename, point **datapoints)
+struct datapoint_info read_input_file(char* input_filename, 
+                                      point **datapoints)
 {
     struct datapoint_info info = {0, 1};
     char ch;
@@ -672,7 +678,7 @@ int main(int argc, char *argv[])
     /* check if there was an allocation error */
     if (info.N == -1  ||  info.N == 0)
     {
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
         matrix_free(&datapoints, info.d);
         exit(1);
     }
