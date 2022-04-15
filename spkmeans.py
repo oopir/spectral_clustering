@@ -1,4 +1,5 @@
 import sys
+import os.path
 import pandas as pd
 import numpy as np
 import ctypes
@@ -104,6 +105,11 @@ def kmeans_pp(T):
 
 
 def read_args():
+    # https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
+    # - we can assume K is always provided
+    # - if goal != spk, validation on K is NOT required
+    # - if goal == spk  --> (k==0) or (1 < k < N)
+
     # validate all arguments EXCEPT K
     if (len(sys.argv) != 4 or \
         sys.argv[2] not in ["spk", "wam", "ddg", "lnorm", "jacobi"] or \
@@ -131,6 +137,10 @@ def read_args():
 
 
 def validate_jacobi_input_file(mat):
+    #   validating according to the following instructions:
+    #   https://moodle.tau.ac.il/mod/forum/discuss.php?d=72817
+    #   (input should be a symmetric matrix) 
+
     if mat.shape[0] != mat.shape[1]:
         print("Invalid Input!")
         exit(1)
@@ -143,6 +153,9 @@ def validate_jacobi_input_file(mat):
 
     
 def pretty_print_mat(mat, is_jacobi=False):
+        # first condition was inserted because of this post:
+        # https://moodle.tau.ac.il/mod/forum/discuss.php?d=70904
+        
         first_line = ",".join(["%.4f" % fl for fl in mat[0]]) + "\n"
         if is_jacobi:
             first_line = first_line.replace("-0.0000", "0.0000")
@@ -155,7 +168,12 @@ def pretty_print_mat(mat, is_jacobi=False):
 def main():
     # read args and load input file
     K, goal, file_name = read_args()
-    datapoints = pd.read_csv(file_name, header=None).to_numpy()
+
+    try:
+        datapoints = pd.read_csv(file_name, header=None).to_numpy()
+    except Exception:
+        print("Invalid Input!")
+        exit(1)
 
     # validate arguments based on data files
     if len(datapoints) == 0 or (goal == "spk" and K >= len(datapoints)):
@@ -190,18 +208,6 @@ def main():
         pretty_print_mat(lnorm)
     
     elif goal == "jacobi":
-        # wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
-        # wam_flat = sum(wam, [])
-        
-        # ddg = mykmeanssp.ddg(wam_flat, N)
-        # ddg_flat = sum(ddg, [])
-
-        # lnorm = mykmeanssp.lnorm(wam_flat, ddg_flat, N)
-        # lnorm_flat = sum(lnorm, [])
-
-        # jacobi_output = mykmeanssp.jacobi(lnorm_flat, N)
-        # pretty_print_mat(jacobi_output)
-
         validate_jacobi_input_file(datapoints)
         jacobi_output = mykmeanssp.jacobi(datapoints.flatten().tolist(), N)
         pretty_print_mat(jacobi_output, is_jacobi=True)
@@ -220,9 +226,7 @@ def main():
         jacobi_flat = sum(jacobi_output, [])
         
         T = mykmeanssp.get_input_for_kmeans(jacobi_flat, N, K)
-        # if (K == 2 and "input_4" in file_name):
-        #     pretty_print_mat(T)
-        #     print("~" * 50)
+        
         kmeans_pp(T)
 
 

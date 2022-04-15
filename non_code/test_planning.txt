@@ -1,42 +1,26 @@
 
 fixed test cases to run on every file:
 
-- general input files
-    d = 1
+- INVALID cases for SPK  (only for python)
 
-- general cases
-    k = 1  (on all cases or in spk?)
-    k >= N
-    k = 0  (on all cases or in spk? almog&leah allowed on all cases)
-    k as float value
-    k as negative int
-    k as negative float
-    k as NaN
+    k = 1  
+            if given as input:      invalid input                
+            if given by heuristic:  an error has occurred    
+    k >= N                                                  
+    k = 0.0                                                   
+    k as float value                                        
+    k as negative int                                       
+    k as negative float                                     
+    k as NaN                                                
+
+
+- general input files  (both python and C)
+
+    d = 1  (Leah's tester contains this case)
+    N = 1
 
     filename that does not exist
     filename with wrong extention
 
     wrong order of arguments
-
     missing an argument
-
-    # we can assume file is in correct format
-
-
-- wam
-    maybe: k=1, k=0
-    make sure it works with positive k
-
-- ddg
-
-    make sure it works with positive k
-
-- lnorm
-    make sure it works with positive k
-
-- jacobi
-    make sure it works with positive k
-
-- spk
-    k = 0
-

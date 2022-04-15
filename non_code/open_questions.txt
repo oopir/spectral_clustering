@@ -18,27 +18,31 @@
 
 ------------------------------- TODO - IMPORTANT ---------------------------------
 
-@ look over things we left in whatsapp group to do next time
 
-@ we need a main function for C code (?)
-    and then, make sure the file compiles using the command from instruction
+@ create a compilation shell script
 
-@ fix argument handling when goal != spk
+@ decide if w should stop assuming Lnorm is symmetric 
 
-@ we need to create a header file + compilation shel script
 
-@ compare ourselves with *updated* script from leah
+------------------------------- FORUM POSTS ---------------------------------
 
-@ decide if we want to make our own specific tests
+
+@ jacobi input forum post: https://moodle.tau.ac.il/mod/forum/discuss.php?d=72817
+
+@ validation on 'k': https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
+
 
 ------------------------------- DO BEFORE SUBMISSION ------------------------------
 
-@ go over forum again!  (might take A LOT OF TIME)
-
-@ make sure every line is below 80 characters long
+@ go over forum again!
+    - we already checked posts up to 14/04/2022
 
 @ finish documentation: write a summary for every function
+
+@ make sure every line is below 80 characters long
 
 @ make sure we didnt ruin anything in testing
     - check that output has ONLY one extra line
     - remove debug prints everywhere
+
+@ run final test against Leah's tester
