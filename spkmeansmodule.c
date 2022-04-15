@@ -41,9 +41,10 @@ static void matrix_free(matrix *mat, int num_of_rows);
 
 
 
-/* populate an array of points based on a python-object */
-/* input: py_obj is a 1d-list, representing a 2d-list with dimensions dim1 x dim2 */
-/* read_input is "free"-safe! Even if it returns -1, there's no mess to clean up */
+/*  Populate an array of points based on a python-object 
+        input: py_obj is a 1d-list, representing a
+               2d-list with dimensions dim1 x dim2
+    If operation fails, it deals with freeing any memory that it allocated. */
 int read_input(PyObject *py_obj, point **c_arr, int dim1, int dim2)
 {
     int i,j;
@@ -77,6 +78,12 @@ int read_input(PyObject *py_obj, point **c_arr, int dim1, int dim2)
     return 0;
 }
 
+/*  Assign xi to the closest cluster, and update that cluster 
+    Parameters:
+        - xi : the datapoint to assign
+        - clusters : the clusters struct 
+        - mu : the current centroids
+        - K, d : number of clusters, dimension of datapoint  */
 void assign_to_cluster(point xi, struct cluster* clusters, point* mu, int K, int d)
 {
     int j;
@@ -103,6 +110,7 @@ void assign_to_cluster(point xi, struct cluster* clusters, point* mu, int K, int
     clusters[argmin].size++;
 }
 
+/*  Returns whether the algorithm has reached its convergence criteria */
 int not_converge(point* mu, point* prev_mu, double eps, int K, int d)
 {
     int i;
@@ -117,6 +125,7 @@ int not_converge(point* mu, point* prev_mu, double eps, int K, int d)
     return 0;
 }
 
+/*  Frees memory used inside cluster struct */
 void free_clusters(struct cluster* clusters, int fail_index)
 {
     int i;
@@ -127,6 +136,8 @@ void free_clusters(struct cluster* clusters, int fail_index)
     free(clusters);
 }
 
+/*  Performs the whole kmeans algorithm, given the 
+    datapoints and the initial centroids        */
 static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int max_iter, double eps)
 {
     /* declare variables */
@@ -247,6 +258,8 @@ static int get_clusters(point *datapoints, point *mu, int N, int d, int K, int m
     return 0;
 }
 
+/*  Parses the input for kmeans algorithm, and invokes
+    the get_clusters method                          */
 static PyObject* fit(PyObject *self, PyObject *args)
 {
     PyObject *initial_mu_obj;
@@ -313,8 +326,10 @@ static PyObject* fit(PyObject *self, PyObject *args)
 */
 
 
-/*  returns a matrix initialized with zeroes  */
-/*  DDG functions assumes the matrix has zeroes in it !!!  */
+
+/*  Allocates a matrix of dimensions (dim1 x dim2) initialized with zeroes.
+    If operation fails, it deals with freeing any memory that it allocated.
+    Returns 0 if successful, otherwise -1.                               */
 static int matrix_malloc(matrix *mat, int dim1, int dim2)
 {
     int i,j;
@@ -350,6 +365,7 @@ static int matrix_malloc(matrix *mat, int dim1, int dim2)
     return 0;
 }
 
+/*  converts a C matrix (dim1 x dim2) into a PyObject with the same info */
 static PyObject* matrix_to_python(matrix mat, int dim1, int dim2)
 {
     /* code is based on this stack-overflow thread:
@@ -372,6 +388,8 @@ static PyObject* matrix_to_python(matrix mat, int dim1, int dim2)
     return returned_list;
 }
 
+/* frees memmory of an allocated matrix
+   if num_of_rows == 0, nothing happens */
 static void matrix_free(matrix *mat, int num_of_rows)
 {
     int i;
@@ -383,7 +401,8 @@ static void matrix_free(matrix *mat, int num_of_rows)
 }
 
 
-
+/*  Computes the weighted adjacency matrix according to
+    the specified datapoints and input dimensions     */
 static PyObject* wam(PyObject *self, PyObject *args)
 {
     PyObject *datapoints_obj, *result;
@@ -391,7 +410,7 @@ static PyObject* wam(PyObject *self, PyObject *args)
     int N,d;
     matrix wam;
     
-    /* parse arguments from python int our variables */
+    /* parse arguments from python into our variables */
     if (!PyArg_ParseTuple(args, "Oii", &datapoints_obj, &N, &d))
     {
         printf("An Error Has Occurred\n");
@@ -418,13 +437,15 @@ static PyObject* wam(PyObject *self, PyObject *args)
     return result;
 }
 
+/*  Computes the diagonal degree matrix according to
+    the given weighted adjacency matrix (NxN)      */
 static PyObject* ddg(PyObject *self, PyObject *args)
 {
     PyObject *wam_obj, *result;
     matrix wam, ddg;
     int N;
     
-    /* parse arguments from python int our variables */
+    /* parse arguments from python into our variables */
     if (!PyArg_ParseTuple(args, "Oi", &wam_obj, &N))
     {
         printf("An Error Has Occurred\n");
@@ -451,13 +472,18 @@ static PyObject* ddg(PyObject *self, PyObject *args)
     return result;
 }
 
+/*  Computes the matrix L-norm according to 
+    the algorithm specified in the instructions.
+    Parameters: 
+        - weighted adjacency matrix (NxN)
+        - diagonal degree matrix    (NxN)      */
 static PyObject* lnorm(PyObject *self, PyObject *args)
 {
     PyObject *ddg_obj, *wam_obj, *result;
     matrix wam, ddg, lnorm;
     int N;
     
-    /* parse arguments from python int our variables */
+    /* parse arguments from python into our variables */
     if (!PyArg_ParseTuple(args, "OOi", &wam_obj, &ddg_obj, &N))
     {
         printf("An Error Has Occurred\n");
@@ -491,6 +517,7 @@ static PyObject* lnorm(PyObject *self, PyObject *args)
     return result;
 }
 
+/*  Perform the jacobi algorithm on the given symmetric matrix A (NxN) */
 static PyObject* jacobi(PyObject *self, PyObject *args)
 {
     PyObject *A_obj, *result;
@@ -524,13 +551,12 @@ static PyObject* jacobi(PyObject *self, PyObject *args)
 }
 
 
-
+/*  Comparison function for qsort */
 static int cmpfunc (const void * a, const void * b) 
 {
     double *row_a = *((double **)a);
     double *row_b = *((double **)b);
     
-    /* return row_a[0] - row_b[0] <= 0 ? -1 : 1 ; */
     if (row_a[0] < row_b[0])
         return -1;
     if (row_b[0] < row_a[0])
@@ -539,6 +565,10 @@ static int cmpfunc (const void * a, const void * b)
 
 }
 
+/*  Sorts the jacobi matrix by the row of eigenvalues
+    Parameters:
+        jacobi : the matrix to sort (N+1xN)
+        transpose_jacobi : a temporary matrix for computations (NxN+1) */
 static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
 {
     int i,j;
@@ -564,6 +594,11 @@ static void sort_jacobi(matrix jacobi, matrix transpose_jacobi, int N)
     }
 }
 
+/*  Performs the eigengap heuristic (step 3 of general algorithm) 
+    Parameters: 
+        jacobi - the jacobi matrix (NxN) 
+        k      - 0 to perform heuristic, 
+                 all other values lead to no action!            */
 static int determine_k(matrix jacobi, int N, int k)
 {
     /* If k!=0, return as is. Otherwise, perform heuristic */
@@ -591,6 +626,8 @@ static int determine_k(matrix jacobi, int N, int k)
     return k;
 }
 
+/*  Populates the given matrix T (Nxk) by performing 
+    steps 4+5 of the general algorithm.                */
 static void populate_T(matrix T, matrix jacobi, int N, int k)
 {
     int i,j;
@@ -618,14 +655,14 @@ static void populate_T(matrix T, matrix jacobi, int N, int k)
 }
 
 /* perform steps 3-5 of the spectral clustering algorithm */
-/* input: jacobi matrix, (N+1) x (N) */
+/* input: jacobi matrix (N+1xN)  &  the given k           */
 static PyObject* get_input_for_kmeans(PyObject *self, PyObject *args)
 {
     PyObject *jacobi_obj, *result;
     matrix jacobi, transpose_jacobi, T;
     int N, k;
 
-    /* parse arguments from python int our variables */
+    /* parse arguments from python into our variables */
     if (!PyArg_ParseTuple(args, "Oii", &jacobi_obj, &N, &k))
     {
         printf("An Error Has Occurred\n");

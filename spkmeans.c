@@ -32,6 +32,12 @@ struct rotation_mat_info {
 static void matrix_free(matrix *mat, int num_of_rows);
 
 
+/*  Returns the l2-norm of the difference between the specified  vectors.
+    params:
+        v1, v2  - the two vectors
+        d       - the vector's dimension
+        root    - 1 for norm, 0 for norm squard
+ */
 double norm_of_diff(point v1, point v2, int d, int root)
 {
     int i;
@@ -53,8 +59,9 @@ double norm_of_diff(point v1, point v2, int d, int root)
 */
 
 
-/*  returns a matrix initialized with zeroes  */
-/*  DDG functions assumes the matrix has zeroes in it !!!  */
+/*  Allocates a matrix of dimensions (dim1 x dim2) initialized with zeroes.
+    If operation fails, it deals with freeing any memory that it allocated.
+    Returns 0 if successful, otherwise -1.                               */
 static int matrix_malloc(matrix *mat, int dim1, int dim2)
 {
     int i,j;
@@ -90,6 +97,8 @@ static int matrix_malloc(matrix *mat, int dim1, int dim2)
     return 0;
 }
 
+/* frees memmory of an allocated matrix
+   if num_of_rows == 0, nothing happens */
 static void matrix_free(matrix *mat, int num_of_rows)
 {
     int i;
@@ -107,7 +116,8 @@ static void matrix_free(matrix *mat, int num_of_rows)
 -----------------------------------------------------------------------
 */
 
-
+/*  Computes the weighted adjacency matrix according to
+    the specified datapoints and input dimensions     */
 matrix func_wam(point *datapoints, int N, int d)
 {
     int i,j;
@@ -138,6 +148,8 @@ matrix func_wam(point *datapoints, int N, int d)
     return wam;
 }
 
+/*  Computes the diagonal degree matrix according to
+    the given weighted adjacency matrix (NxN)      */
 matrix func_ddg(matrix wam, int N)
 {
     matrix ddg;
@@ -165,62 +177,66 @@ matrix func_ddg(matrix wam, int N)
     return ddg;
 }
 
+/*  Computes the matrix L-norm according to 
+    the algorithm specified in the instructions.
+    Parameters: 
+        - weighted adjacency matrix (NxN)
+        - diagonal degree matrix    (NxN)      */
 matrix func_lnorm(matrix wam, matrix ddg, int N)
 {
-    matrix lnorm, tmp_mat;
+    matrix lnorm, D_half;
     int i,j;
-    double tmp;
  
     /* allocate lnorm */
     if ((matrix_malloc(&lnorm, N, N) == -1) || 
-        (matrix_malloc(&tmp_mat, N, N) == -1))
+        (matrix_malloc(&D_half, N, N) == -1))
     {
         matrix_free(&wam, N);
         matrix_free(&ddg, N);
 
         if (lnorm != NULL)
             matrix_free(&lnorm, N);
-        if (tmp_mat != NULL)
-            matrix_free(&tmp_mat, N);
+        if (D_half != NULL)
+            matrix_free(&D_half, N);
 
         printf("An Error Has Occurred");
         exit(1);
     }
 
-    /* populate tmp_mat */
-    /* ASSUMES tmp_mat is initialized with zeroes */
+    /* populate D_half */
+    /* ASSUMES D_half is initialized with zeroes */
     for (i = 0; i < N; i++)
-        for (j = 0; j < N; j++)
-        {
-            tmp = ddg[i][i] == 0 ? 0 : (1 / sqrt(ddg[i][i]));
-            tmp_mat[i][j] = tmp * wam[i][j];
-        }
-                
+        if (ddg[i][i] != 0)
+            D_half[i][i] = pow(ddg[i][i], -0.5);
+    
 
     /* populate lnorm */
     /* ASSUMES lnorm is initialized with zeroes */
-    /* ASSUMES lnorm should be symmetric */
     for (i = 0; i < N; i++)
-    {
         for (j = i; j < N; j++)
         {
-            tmp = ddg[j][j] == 0 ? 0 : (1 / sqrt(ddg[j][j]));
-            lnorm[i][j] = tmp_mat[i][j] * tmp;
-        
-            lnorm[i][j] = i == j ? 1 - lnorm[i][j] : -lnorm[i][j];
+            lnorm[i][j] = D_half[i][i] * wam[i][j] * D_half[j][j];
+            
+            lnorm[i][j] = -lnorm[i][j];
+            if (i==j)
+                lnorm[i][j] += 1;
+
 
             lnorm[j][i] = lnorm[i][j];
         }
-    }
+  
     
     /* free allocated memory */
-    matrix_free(&tmp_mat, N);
+    matrix_free(&D_half, N);
 
     return lnorm;
 }
 
 
 
+/*  Decide the parameters of the next rotational matrix P
+    (based on the current matrix A (NxN)),
+    and insert them to the specified rotation_mat_info struct */
 static void update_p_info(matrix A, int N, struct rotation_mat_info *p) 
 {
     /* initialize p.i, p.j --- assumes N > 1 */
@@ -246,6 +262,8 @@ static void update_p_info(matrix A, int N, struct rotation_mat_info *p)
     p->s = t * p->c;
 }
 
+/*  Updates the mtarix A' according to the current matrix A
+    and the current rotational matrix P                     */
 static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_info p)
 {
     int x,y,r;
@@ -256,6 +274,7 @@ static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_
             A_prime[x][y] = A[x][y];
         
     /* make necessary modifications to A_prime */
+    /* (assumes A_prime should be symmetric)   */
     for (r = 0; r < N; r++)
     {
         if (r != p.i && r != p.j)
@@ -282,6 +301,7 @@ static void update_A_prime(matrix A_prime, matrix A, int N, struct rotation_mat_
     A_prime[p.j][p.i] = 0;
 }
 
+/*  Returns the 'off(A)^2' value as defined in the instructions */
 static double off(matrix A, int N)
 {
     double val = 0;
@@ -294,12 +314,20 @@ static double off(matrix A, int N)
     return val;
 }
 
+/*  Checks whether the jacobi algorithm has reached conversion */
 static int converges(matrix A, matrix A_prime, int N)
 {
     /* https://moodle.tau.ac.il/mod/forum/discuss.php?d=82078 */
     return (off(A, N) - off(A_prime, N) <= pow(10,-5));
 }
 
+/*  Updates the matrix V according to the current rotational matrix P 
+    Parameters:
+        - V   : the matrix to update
+        - P   : a temporary matrix to represent P in the algorithm (NxN)
+        - tmp : a temporary matrix to be used in the algorithm (NxN)
+        - p_info : a struct containing the info 
+                   of the current rotational matrix                    */
 static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_info p_info)
 {
     int x,y,k;
@@ -340,6 +368,7 @@ static void update_V(matrix V, matrix P, matrix tmp, int N, struct rotation_mat_
         
 }
 
+/*  Perform the jacobi algorithm on the given symmetric matrix A (NxN) */
 matrix func_jacobi(matrix A, int N)
 {
     matrix A_prime, P, V, tmp, jacobi;
@@ -405,7 +434,7 @@ matrix func_jacobi(matrix A, int N)
     /* https://moodle.tau.ac.il/mod/forum/discuss.php?d=95579 */
     if (!is_diagonal)
     {
-        /* perform algorithm */
+        /* perform algorithm (max_iterations == 100) */
         for (i = 0; i < 100; i++)
         {
             update_p_info(A, N, &p_info);
@@ -424,15 +453,11 @@ matrix func_jacobi(matrix A, int N)
         for (i = 0; i < N; i++)
             eigenvalues[i] = A_prime[i][i];
     }    
-    else
+    else /* A is already diagonal, then it contains the eigenvalues */
     {
         for (i = 0; i < N; i++)
             eigenvalues[i] = A[i][i];
     }
-    /* A <-- A_prime
-    for (x = 0; x < N; x++)
-        for (y = 0; y < N; y++)
-            A[x][y] = A_prime[x][y]; */
 
 
     /* jacobi output will contain V, and not V^T:
@@ -456,7 +481,11 @@ matrix func_jacobi(matrix A, int N)
 
 
 
-/* if the function returns info with N=-1 , it means there was an allocation failure */
+/*  Reads datapoints from the given file into the given point array.
+    Returns a struct containing the dimensions of the input file:
+        If the function returns info with N=-1 , 
+        it means there was an allocation failure.
+        In this case, d will hold the failiure-index */
 struct datapoint_info read_input_file(char* input_filename, point **datapoints)
 {
     struct datapoint_info info = {0, 1};
@@ -523,7 +552,7 @@ struct datapoint_info read_input_file(char* input_filename, point **datapoints)
     return info;
 }
 
-
+/*  Validates the program arguments according to the instructions */
 void validate_arguments(int argc, char *argv[])
 {
     int filename_len;
@@ -556,7 +585,9 @@ void validate_arguments(int argc, char *argv[])
     }
 }
 
-
+/*  When running the jacobi algorithm, validate that the input is a
+    symmetric matrix.
+    If the input is invalid, free memory and then exit.             */
 void validate_jacobi_input_file(matrix datapoints, struct datapoint_info info)
 {
     /* validating according to the following instructions:
@@ -582,11 +613,12 @@ void validate_jacobi_input_file(matrix datapoints, struct datapoint_info info)
 }
 
 
+/*  Prints a matrix according to the instruction specifications */
 void matrix_print(matrix mat, int dim1, int dim2, int is_jacobi)
 {
     int i,j;
     
-    /* first line (if jacobi, make sure -0 is printed as +0) 
+    /* first line (if jacobi, make sure -0.0000 is printed as +0.0000) 
        https://moodle.tau.ac.il/mod/forum/discuss.php?d=70904  */
     if (is_jacobi)
     {
@@ -645,7 +677,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-
+    /*  Perform action based on the specified goal */
     if (!strcmp(argv[1],"wam"))
     {
         wam = func_wam(datapoints, info.N, info.d);

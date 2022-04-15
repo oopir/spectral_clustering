@@ -1,14 +1,3 @@
------------------- logical contradictions in instruction files ------------------
-
-@ multilple files:
-    -section 2.3 states "you can use functions implemented only in spkmeans.c"
-    -but earlier instruction says we can create more .c files
-
-@ convergence: when checking if smaller than epsilon, should we 
-                use absolute value on the difference or not?
-
-@ iterating on all matrix VS iteration on top "triangle" - argue later
-
 -----------------------  test cases that dont work yet  --------------------------
 
 15 spk input_12
@@ -16,16 +5,7 @@
 8  spk input_2
 15 spk input_2
 
-------------------------------- TODO - IMPORTANT ---------------------------------
-
-
-@ create a compilation shell script
-
-@ decide if w should stop assuming Lnorm is symmetric 
-
-
 ------------------------------- FORUM POSTS ---------------------------------
-
 
 @ jacobi input forum post: https://moodle.tau.ac.il/mod/forum/discuss.php?d=72817
 
@@ -34,10 +14,12 @@
 
 ------------------------------- DO BEFORE SUBMISSION ------------------------------
 
-@ go over forum again!
-    - we already checked posts up to 14/04/2022
+@ maybe deal with duplicate matrix_malloc, matrix_free
 
 @ finish documentation: write a summary for every function
+
+@ go over forum again!
+    - we already checked posts up to 14/04/2022
 
 @ make sure every line is below 80 characters long
 
@@ -46,3 +28,4 @@
     - remove debug prints everywhere
 
 @ run final test against Leah's tester
+    - also on NOVA !

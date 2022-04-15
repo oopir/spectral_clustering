@@ -11,13 +11,14 @@ import mykmeanssp
 
 
 def norm_of_diff(v1, v2):
+    """ Returns the l2-norm of the difference between the two vectors """
+
     if (len(v1) != len(v2)):
         print("An Error Has Occurred")
         sys.exit(1)
 
     norm = sum([(v1[i] - v2[i]) ** 2 for i in range(len(v1))])
     return norm
-
 
 def is_float(st):
     try:
@@ -33,8 +34,9 @@ def is_int(st):
     except ValueError:
         return False
 
-
 def kmeans_pp(T):
+    """ Performs the kmeans++ algorithm (with default arguments) """
+
     np.random.seed(0)
 
     # parse arguments
@@ -105,6 +107,9 @@ def kmeans_pp(T):
 
 
 def read_args():
+    """ Validates and returns the 3 arguments of the program.
+        Exits the program if an argument is invalid.      """
+
     # https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
     # - we can assume K is always provided
     # - if goal != spk, validation on K is NOT required
@@ -121,7 +126,7 @@ def read_args():
     goal      = sys.argv[-2]
     K         = None
 
-    # if goal is spk, CHECK K is valid & read it
+    # if goal is spk, CHECK if K is valid & read it
     if (goal == 'spk'):
         if (not is_int(sys.argv[1])):
             print("Invalid Input!")
@@ -137,6 +142,10 @@ def read_args():
 
 
 def validate_jacobi_input_file(mat):
+    """ When running the jacobi algorithm, validate 
+        that the input is a symmetric matrix.
+        Exit if the input is invalid.             
+    """
     #   validating according to the following instructions:
     #   https://moodle.tau.ac.il/mod/forum/discuss.php?d=72817
     #   (input should be a symmetric matrix) 
@@ -153,16 +162,18 @@ def validate_jacobi_input_file(mat):
 
     
 def pretty_print_mat(mat, is_jacobi=False):
-        # first condition was inserted because of this post:
-        # https://moodle.tau.ac.il/mod/forum/discuss.php?d=70904
-        
-        first_line = ",".join(["%.4f" % fl for fl in mat[0]]) + "\n"
-        if is_jacobi:
-            first_line = first_line.replace("-0.0000", "0.0000")
-        
-        data_str = first_line + "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat[1:]]) # + "\n"
+    """ prints a matrix according to the instruction specifications """
+    
+    # first condition was inserted because of this post:
+    # https://moodle.tau.ac.il/mod/forum/discuss.php?d=70904
+    
+    first_line = ",".join(["%.4f" % fl for fl in mat[0]]) + "\n"
+    if is_jacobi:
+        first_line = first_line.replace("-0.0000", "0.0000")
+    
+    data_str = first_line + "\n".join([",".join(["%.4f" % fl for fl in mat_i]) for mat_i in mat[1:]]) # + "\n"
 
-        print(data_str)
+    print(data_str)
 
 
 def main():
@@ -171,6 +182,8 @@ def main():
 
     try:
         datapoints = pd.read_csv(file_name, header=None).to_numpy()
+    # The following exception deals with permission issues 
+    # and with cases when the file does not exist
     except Exception:
         print("Invalid Input!")
         exit(1)
@@ -186,6 +199,8 @@ def main():
 
 
     # act according to the specified goal
+    # (whenever a matrix should be sent to the C extension,
+    #  we 'flatten' it to a 1D-array before sending it)
     if goal == "wam":
         wam = mykmeanssp.wam(datapoints.flatten().tolist(), N, d)
         pretty_print_mat(wam)
