@@ -245,7 +245,7 @@ def main():
         jacobi_flat = sum(jacobi_output, [])
         
         T = mykmeanssp.get_input_for_kmeans(jacobi_flat, N, K)
-        
+
         kmeans_pp(T)
 
 

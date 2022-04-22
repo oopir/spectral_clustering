@@ -128,7 +128,7 @@ matrix func_wam(point *datapoints, int N, int d)
     {
         matrix_free(&datapoints, N);
 
-        printf("An Error Has Occurred\n");
+        printf("An Error Has Occurred");
         exit(1);
     }
 
@@ -162,7 +162,7 @@ matrix func_ddg(matrix wam, int N)
     {
         matrix_free(&wam, N);
 
-        printf("An Error Has Occurred\n");
+        printf("An Error Has Occurred");
         exit(1);
     }
 
@@ -201,7 +201,7 @@ matrix func_lnorm(matrix wam, matrix ddg, int N)
         if (D_half != NULL)
             matrix_free(&D_half, N);
 
-        printf("An Error Has Occurred\n");
+        printf("An Error Has Occurred");
         exit(1);
     }
 
@@ -402,7 +402,7 @@ matrix func_jacobi(matrix A, int N)
         if (jacobi != NULL)
             matrix_free(&jacobi, N+1);
 
-        printf("An Error Has Occurred\n");
+        printf("An Error Has Occurred");
         exit(1);  
     }
 
@@ -417,7 +417,7 @@ matrix func_jacobi(matrix A, int N)
         matrix_free(&tmp, N);
         matrix_free(&jacobi, N+1);
 
-        printf("An Error Has Occurred\n");
+        printf("An Error Has Occurred");
         exit(1);  
     }
 
@@ -678,7 +678,7 @@ int main(int argc, char *argv[])
     /* check if there was an allocation error */
     if (info.N == -1  ||  info.N == 0)
     {
-        printf("An Error Has Occurred\n");
+        printf("An Error Has Occurred");
         matrix_free(&datapoints, info.d);
         exit(1);
     }
