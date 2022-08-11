@@ -35,7 +35,7 @@ static void matrix_free(matrix *mat, int num_of_rows);
 
 /*
 ----------------------------------------------------------------------- 
------------------------------EX2 CODE---------------------------------- 
+-----------------------Kmeans Implementation---------------------------
 -----------------------------------------------------------------------
 */
 
@@ -137,7 +137,7 @@ void free_clusters(struct cluster* clusters, int fail_index)
     free(clusters);
 }
 
-/*  Performs the whole kmeans algorithm, given the 
+/*  Performs the *kmeans* algorithm, given the 
     datapoints and the initial centroids        */
 static int get_clusters(point *datapoints, point *mu, int N, int d, 
                         int K, int max_iter, double eps)
@@ -326,7 +326,7 @@ static PyObject* fit(PyObject *self, PyObject *args)
 
 /*
 ----------------------------------------------------------------------- 
------------------------------NEW CODE---------------------------------- 
+------------------------Extention Handlers-----------------------------
 -----------------------------------------------------------------------
 */
 

@@ -52,12 +52,6 @@ double norm_of_diff(point v1, point v2, int d, int root)
 }
 
 
-/*
------------------------------------------------------------------------ 
------------------------------NEW CODE---------------------------------- 
------------------------------------------------------------------------
-*/
-
 
 /*  Allocates a matrix of dimensions (dim1 x dim2) initialized with zeroes.
     If operation fails, it deals with freeing any memory that it allocated.
@@ -110,11 +104,6 @@ static void matrix_free(matrix *mat, int num_of_rows)
 }
 
 
-/*
------------------------------------------------------------------------ 
------------------------------MAIN CODE---------------------------------
------------------------------------------------------------------------
-*/
 
 /*  Computes the weighted adjacency matrix according to
     the specified datapoints and input dimensions     */
@@ -558,7 +547,7 @@ struct datapoint_info read_input_file(char* input_filename,
     return info;
 }
 
-/*  Validates the program arguments according to the instructions */
+/*  Validates the program arguments */
 void validate_arguments(int argc, char *argv[])
 {
     int filename_len;
@@ -596,10 +585,6 @@ void validate_arguments(int argc, char *argv[])
     If the input is invalid, free memory and then exit.             */
 void validate_jacobi_input_file(matrix datapoints, struct datapoint_info info)
 {
-    /* validating according to the following instructions:
-       https://moodle.tau.ac.il/mod/forum/discuss.php?d=72817
-       (input should be a symmetric matrix) */
-    
     int i,j;
 
     if (info.N != info.d)

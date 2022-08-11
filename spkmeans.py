@@ -5,10 +5,6 @@ import numpy as np
 import ctypes
 import mykmeanssp
 
-# ----------------------------------------------------------------- #
-# --------------------------- ex2 code ---------------------------- #
-# ----------------------------------------------------------------- #
-
 
 def norm_of_diff(v1, v2):
     """ Returns the l2-norm of the difference between the two vectors """
@@ -60,7 +56,7 @@ def kmeans_pp(T):
     initial_mu = []
     initial_mu_indices = []
 
-    # ------ perform algorithm #1 - choose the initial centroids ------ #
+    # ------ perform step #1 - choose the initial centroids ------ #
 
     # choose the first centroid at random
     first_choice_ind = np.random.choice(N)
@@ -93,7 +89,7 @@ def kmeans_pp(T):
     
 
 
-    # ------ perform algorithm #2 - call c ext to calculate clusters ------ #
+    # ------ perform step #2 - call c extension to calculate clusters ------ #
     
     result = mykmeanssp.fit(np.array(initial_mu).flatten().tolist(), \
                             datapoints.flatten().tolist(),           \
@@ -103,16 +99,12 @@ def kmeans_pp(T):
     pretty_print_mat(result)
 
 
-# ----------------------------------------------------------------- #
-# ------------------------ end of ex2 code ------------------------ #
-# ----------------------------------------------------------------- #
 
 
 def read_args():
     """ Validates and returns the 3 arguments of the program.
         Exits the program if an argument is invalid.      """
 
-    # https://moodle.tau.ac.il/mod/forum/discuss.php?d=65199
     # - we can assume K is always provided
     # - if goal != spk, validation on K is NOT required
     # - if goal == spk  --> (k==0) or (1 < k < N)
@@ -148,9 +140,6 @@ def validate_jacobi_input_file(mat):
         that the input is a symmetric matrix.
         Exit if the input is invalid.             
     """
-    #   validating according to the following instructions:
-    #   https://moodle.tau.ac.il/mod/forum/discuss.php?d=72817
-    #   (input should be a symmetric matrix) 
 
     if mat.shape[0] != mat.shape[1]:
         print("Invalid Input!")
@@ -165,9 +154,6 @@ def validate_jacobi_input_file(mat):
     
 def pretty_print_mat(mat, is_jacobi=False):
     """ prints a matrix according to the instruction specifications """
-    
-    # first condition was inserted because of this post:
-    # https://moodle.tau.ac.il/mod/forum/discuss.php?d=70904
     
     first_line = ",".join(["%.4f" % fl for fl in mat[0]]) + "\n"
     if is_jacobi:
